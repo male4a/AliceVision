@@ -221,6 +221,7 @@ int aliceVision_main(int argc, char** argv)
     // user optional parameters
     const double maxEpipolarDistance = 4.0;
     const double minAngle = 5.0;
+    const double maxAngle = 40.0;
 
     int randomSeed = std::mt19937::default_seed;
 
@@ -309,6 +310,11 @@ int aliceVision_main(int argc, char** argv)
             continue;
         }
 
+        if (radianToDegree(angle) > maxAngle)
+        {
+            continue;
+        }
+
         //If the angle is too small, then dramatically reduce its chances
         if (radianToDegree(angle) < minAngle)
         {
@@ -324,7 +330,8 @@ int aliceVision_main(int argc, char** argv)
         double refScore = sfm::ExpansionPolicyLegacy::computeScore(tracksHandler.getAllTracks(), usedTracks, pair.reference, maxref, 5);
         double nextScore = sfm::ExpansionPolicyLegacy::computeScore(tracksHandler.getAllTracks(), usedTracks, pair.next, maxnext, 5);
 
-        double score = std::min(refScore, nextScore) * std::min(10.0, radianToDegree(angle));
+        double score = std::min(refScore, nextScore) * std::max(1.0, radianToDegree(angle));
+
 
         if (score > bestScore)
         {
