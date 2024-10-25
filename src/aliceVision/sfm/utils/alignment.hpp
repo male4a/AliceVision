@@ -56,6 +56,9 @@ void matchViewsByFilePattern(const sfmData::SfMData& sfmDataA,
                              const std::string& filePatternMatching,
                              std::vector<std::pair<IndexT, IndexT>>& out_commonViewIds);
 
+std::map<std::string, IndexT> retrieveMatchingFilepath(const sfmData::SfMData& sfmData,
+                            const std::string& filePatternMatching);
+
 void matchViewsByMetadataMatching(const sfmData::SfMData& sfmDataA,
                                   const sfmData::SfMData& sfmDataB,
                                   const std::vector<std::string>& metadataList,
