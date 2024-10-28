@@ -22,7 +22,7 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
         return false;
     }
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < viewsChunk.size(); i++)
     {
         auto it = viewsChunk.begin();
