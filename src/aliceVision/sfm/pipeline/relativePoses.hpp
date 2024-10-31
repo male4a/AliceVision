@@ -8,6 +8,7 @@
 #include <aliceVision/numeric/numeric.hpp>
 #include <aliceVision/dataio/json.hpp>
 #include <aliceVision/geometry/lie.hpp>
+#include <aliceVision/geometry/Pose3.hpp>
 
 namespace aliceVision {
 namespace sfm {

@@ -285,13 +285,53 @@ class SfMData
      * @param[in] view The given view
      * @return true if intrinsic and pose defined
      */
+    bool isPoseAndIntrinsicDefined(const View & view) const
+    {        
+        IndexT poseId = view.getPoseId();
+        if (poseId == UndefinedIndexT)
+        {
+            return false;
+        }
+
+        IndexT intrinsicId = view.getIntrinsicId();
+        if (intrinsicId == UndefinedIndexT)
+        {
+            return false;
+        }
+
+        if (_intrinsics.find(view.getIntrinsicId()) == _intrinsics.end())
+        {
+            return false;
+        }
+        
+        auto it = _poses.find(view.getPoseId());
+        if (it == _poses.end())
+        {
+            return false;
+        }
+
+        bool rigValid = ((!view.isPartOfRig() || view.isPoseIndependant() || getRigSubPose(view).status != ERigSubPoseStatus::UNINITIALIZED));
+        if (!rigValid)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @brief Check if the given view have defined intrinsi
+     * @param[in] view The given view
+     * @return true if intrinsic and pose defined
+     */
     bool isPoseAndIntrinsicDefined(const View* view) const
     {
         if (view == nullptr)
+        {
             return false;
-        return (view->getIntrinsicId() != UndefinedIndexT && view->getPoseId() != UndefinedIndexT &&
-                (!view->isPartOfRig() || view->isPoseIndependant() || getRigSubPose(*view).status != ERigSubPoseStatus::UNINITIALIZED) &&
-                _intrinsics.find(view->getIntrinsicId()) != _intrinsics.end() && _poses.find(view->getPoseId()) != _poses.end());
+        }
+
+        return isPoseAndIntrinsicDefined(*view);
     }
 
     /**

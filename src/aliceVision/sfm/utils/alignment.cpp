@@ -762,7 +762,7 @@ void computeNewCoordinateSystemFromCamerasXAxis(const sfmData::SfMData& sfmData,
     {
         const sfmData::View& view = *viewIt.second.get();
 
-        if (sfmData.isPoseAndIntrinsicDefined(&view))
+        if (sfmData.isPoseAndIntrinsicDefined(view))
         {
             const sfmData::EEXIFOrientation orientation = view.getImage().getMetadataOrientation();
             const sfmData::CameraPose camPose = sfmData.getPose(view);
@@ -804,7 +804,7 @@ void computeNewCoordinateSystemFromCamerasXAxis(const sfmData::SfMData& sfmData,
     {
         const sfmData::View& view = *viewIt.second.get();
 
-        if (sfmData.isPoseAndIntrinsicDefined(&view))
+        if (sfmData.isPoseAndIntrinsicDefined(view))
         {
             const sfmData::EEXIFOrientation orientation = view.getImage().getMetadataOrientation();
             const sfmData::CameraPose camPose = sfmData.getPose(view);
@@ -1010,7 +1010,7 @@ IndexT getCenterCameraView(const sfmData::SfMData& sfmData)
     for (auto& viewIt : sfmData.getViews())
     {
         const sfmData::View& v = *viewIt.second;
-        if (!sfmData.isPoseAndIntrinsicDefined(&v))
+        if (!sfmData.isPoseAndIntrinsicDefined(v))
             continue;
         const auto& pose = sfmData.getPose(v);
         const double dist = (pose.getTransform().center() - camerasCenter).norm();
