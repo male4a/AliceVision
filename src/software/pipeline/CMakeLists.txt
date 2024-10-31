@@ -148,6 +148,21 @@ if(ALICEVISION_BUILD_SFM)
               Boost::json
     )
 
+    # Bootstraping SfM
+    alicevision_add_software(aliceVision_globalRotationEstimating
+        SOURCE main_globalRotationEstimating.cpp
+        FOLDER ${FOLDER_SOFTWARE_PIPELINE}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_feature
+              aliceVision_sfm
+              aliceVision_sfmData
+              aliceVision_track
+              aliceVision_dataio
+              Boost::program_options
+              Boost::json
+    )
+
     # Incremental / Sequential SfM
     alicevision_add_software(aliceVision_incrementalSfM
         SOURCE main_incrementalSfM.cpp

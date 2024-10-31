@@ -417,6 +417,7 @@ bool readCamera(const Version& abcVersion,
     IndexT resectionId = UndefinedIndexT;
     bool intrinsicLocked = false;
     bool poseLocked = false;
+    bool rotationOnly = false;
     bool poseIndependant = true;
     bool lockRatio = true;
     bool lockOffset = false;
@@ -488,6 +489,10 @@ bool readCamera(const Version& abcVersion,
             if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_poseLocked"))
             {
                 poseLocked = getAbcProp<Alembic::Abc::IBoolProperty>(userProps, *propHeader, "mvg_poseLocked", sampleFrame);
+            }
+            if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_rotationOnly"))
+            {
+                rotationOnly = getAbcProp<Alembic::Abc::IBoolProperty>(userProps, *propHeader, "mvg_rotationOnly", sampleFrame);
             }
             if (const Alembic::Abc::PropertyHeader* propHeader = userProps.getPropertyHeader("mvg_poseIndependant"))
             {
@@ -805,7 +810,9 @@ bool readCamera(const Version& abcVersion,
         }
         else
         {
-            sfmData.setPose(*view, sfmData::CameraPose(pose, poseLocked));
+            sfmData::CameraPose cp(pose, poseLocked);
+            cp.setRotationOnly(rotationOnly);
+            sfmData.setPose(*view, cp);
         }
     }
 

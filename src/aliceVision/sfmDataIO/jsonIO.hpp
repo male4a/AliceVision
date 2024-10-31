@@ -106,6 +106,7 @@ inline void saveCameraPose(const std::string& name, const sfmData::CameraPose& c
     bpt::ptree cameraPoseTree;
     savePose3("transform", cameraPose.getTransform(), cameraPoseTree);
     cameraPoseTree.put("locked", cameraPose.isLocked());
+    cameraPoseTree.put("rotationOnly", cameraPose.isRotationOnly());
     parentTree.add_child(name, cameraPoseTree);
 }
 
@@ -133,6 +134,8 @@ inline void loadCameraPose(const std::string& name, sfmData::CameraPose& cameraP
     {
         cameraPose.unlock();
     }
+
+    poseTree.get<bool>("rotationOnly", false);
 }
 
 /**
