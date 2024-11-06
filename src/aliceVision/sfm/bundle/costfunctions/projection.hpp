@@ -52,7 +52,7 @@ class CostProjection : public ceres::CostFunction
 
         const Vec4 pth = pt.homogeneous();
 
-        const Vec2 pt_est = _intrinsics->project(T_pose3, pth, true);
+        const Vec2 pt_est = _intrinsics->transformProject(T_pose3, pth, true);
         const double scale = (_measured.getScale() > 1e-12) ? _measured.getScale() : 1.0;
 
         residuals[0] = (pt_est(0) - _measured.getX()) / scale;
@@ -69,7 +69,7 @@ class CostProjection : public ceres::CostFunction
         {
             Eigen::Map<Eigen::Matrix<double, 2, 16, Eigen::RowMajor>> J(jacobians[0]);
 
-            J = d_res_d_pt_est * _intrinsics->getDerivativeProjectWrtPose(T, pth) * getJacobian_AB_wrt_B<4, 4, 4>(cTr, rTo) *
+            J = d_res_d_pt_est * _intrinsics->getDerivativeTransformProjectWrtPose(T, pth) * getJacobian_AB_wrt_B<4, 4, 4>(cTr, rTo) *
                 getJacobian_AB_wrt_A<4, 4, 4>(Eigen::Matrix4d::Identity(), rTo);
         }
 
@@ -77,7 +77,7 @@ class CostProjection : public ceres::CostFunction
         {
             Eigen::Map<Eigen::Matrix<double, 2, 16, Eigen::RowMajor>> J(jacobians[1]);
 
-            J = d_res_d_pt_est * _intrinsics->getDerivativeProjectWrtPose(T, pth) * getJacobian_AB_wrt_A<4, 4, 4>(cTr, rTo) *
+            J = d_res_d_pt_est * _intrinsics->getDerivativeTransformProjectWrtPose(T, pth) * getJacobian_AB_wrt_A<4, 4, 4>(cTr, rTo) *
                 getJacobian_AB_wrt_A<4, 4, 4>(Eigen::Matrix4d::Identity(), cTr);
         }
 
@@ -85,14 +85,14 @@ class CostProjection : public ceres::CostFunction
         {
             Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> J(jacobians[2], 2, params_size);
 
-            J = d_res_d_pt_est * _intrinsics->getDerivativeProjectWrtParams(T, pth);
+            J = d_res_d_pt_est * _intrinsics->getDerivativeTransformProjectWrtParams(T, pth);
         }
 
         if (jacobians[3] != nullptr)
         {
             Eigen::Map<Eigen::Matrix<double, 2, 3, Eigen::RowMajor>> J(jacobians[3]);
 
-            J = d_res_d_pt_est * _intrinsics->getDerivativeProjectWrtPoint(T, pth) * Eigen::Matrix<double, 4, 3>::Identity();
+            J = d_res_d_pt_est * _intrinsics->getDerivativeTransformProjectWrtPoint(T, pth) * Eigen::Matrix<double, 4, 3>::Identity();
         }
 
         return true;

@@ -12,7 +12,7 @@
 namespace aliceVision {
 namespace camera {
 
-Vec2 Equidistant::project(const Eigen::Matrix4d& pose, const Vec4& pt, bool applyDistortion) const
+Vec2 Equidistant::transformProject(const Eigen::Matrix4d& pose, const Vec4& pt, bool applyDistortion) const
 {
     const double rsensor = std::min(sensorWidth(), sensorHeight());
     const double rscale = sensorWidth() / std::max(w(), h());
@@ -38,7 +38,31 @@ Vec2 Equidistant::project(const Eigen::Matrix4d& pose, const Vec4& pt, bool appl
     return pt_ima;
 }
 
-Eigen::Matrix<double, 2, 9> Equidistant::getDerivativeProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Vec2 Equidistant::project(const Vec4& pt, bool applyDistortion) const
+{
+    const double rsensor = std::min(sensorWidth(), sensorHeight());
+    const double rscale = sensorWidth() / std::max(w(), h());
+    const double fmm = _scale(0) * rscale;
+    const double fov = rsensor / fmm;
+
+    // Compute angle with optical center
+    const double angle_Z = std::atan2(sqrt(pt(0) * pt(0) + pt(1) * pt(1)), pt(2));
+
+    // Ignore depth component and compute radial angle
+    const double angle_radial = std::atan2(pt(1), pt(0));
+
+    const double radius = angle_Z / (0.5 * fov);
+
+    // radius = focal * angle_Z
+    const Vec2 P{cos(angle_radial) * radius, sin(angle_radial) * radius};
+
+    const Vec2 pt_disto = applyDistortion ? this->addDistortion(P) : P;
+    const Vec2 pt_ima = this->cam2ima(pt_disto);
+
+    return pt_ima;
+}
+
+Eigen::Matrix<double, 2, 9> Equidistant::getDerivativeTransformProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -87,7 +111,7 @@ Eigen::Matrix<double, 2, 9> Equidistant::getDerivativeProjectWrtRotation(const E
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_angles * d_angles_d_X * d_X_d_R;
 }
 
-Eigen::Matrix<double, 2, 16> Equidistant::getDerivativeProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 16> Equidistant::getDerivativeTransformProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -136,7 +160,7 @@ Eigen::Matrix<double, 2, 16> Equidistant::getDerivativeProjectWrtPose(const Eige
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_angles * d_angles_d_X * d_X_d_T.block<3, 16>(0, 0);
 }
 
-Eigen::Matrix<double, 2, 16> Equidistant::getDerivativeProjectWrtPoseLeft(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 16> Equidistant::getDerivativeTransformProjectWrtPoseLeft(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -185,7 +209,7 @@ Eigen::Matrix<double, 2, 16> Equidistant::getDerivativeProjectWrtPoseLeft(const 
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_angles * d_angles_d_X * d_X_d_T.block<3, 16>(0, 0);
 }
 
-Eigen::Matrix<double, 2, 4> Equidistant::getDerivativeProjectWrtPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 4> Equidistant::getDerivativeTransformProjectWrtPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -235,7 +259,7 @@ Eigen::Matrix<double, 2, 4> Equidistant::getDerivativeProjectWrtPoint(const Eige
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_angles * d_angles_d_X * d_X_d_pt;
 }
 
-Eigen::Matrix<double, 2, 3> Equidistant::getDerivativeProjectWrtPoint3(const Eigen::Matrix4d& T, const Vec4& pt) const
+Eigen::Matrix<double, 2, 3> Equidistant::getDerivativeTransformProjectWrtPoint3(const Eigen::Matrix4d& T, const Vec4& pt) const
 {
     const Vec4 X = T * pt;  // apply pose
 
@@ -284,7 +308,7 @@ Eigen::Matrix<double, 2, 3> Equidistant::getDerivativeProjectWrtPoint3(const Eig
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_angles * d_angles_d_X * d_X_d_pt;
 }
 
-Eigen::Matrix<double, 2, 3> Equidistant::getDerivativeProjectWrtDisto(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 3> Equidistant::getDerivativeTransformProjectWrtDisto(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -308,7 +332,7 @@ Eigen::Matrix<double, 2, 3> Equidistant::getDerivativeProjectWrtDisto(const Eige
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtDisto(P);
 }
 
-Eigen::Matrix<double, 2, 2> Equidistant::getDerivativeProjectWrtScale(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 2> Equidistant::getDerivativeTransformProjectWrtScale(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -343,22 +367,22 @@ Eigen::Matrix<double, 2, 2> Equidistant::getDerivativeProjectWrtScale(const Eige
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_radius * d_radius_d_fov * d_fov_d_scale;
 }
 
-Eigen::Matrix<double, 2, 2> Equidistant::getDerivativeProjectWrtPrincipalPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 2> Equidistant::getDerivativeTransformProjectWrtPrincipalPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     return getDerivativeCam2ImaWrtPrincipalPoint();
 }
 
-Eigen::Matrix<double, 2, Eigen::Dynamic> Equidistant::getDerivativeProjectWrtParams(const Eigen::Matrix4d& pose, const Vec4& pt3D) const
+Eigen::Matrix<double, 2, Eigen::Dynamic> Equidistant::getDerivativeTransformProjectWrtParams(const Eigen::Matrix4d& pose, const Vec4& pt3D) const
 {
     Eigen::Matrix<double, 2, Eigen::Dynamic> ret(2, getParams().size());
 
-    ret.block<2, 2>(0, 0) = getDerivativeProjectWrtScale(pose, pt3D);
-    ret.block<2, 2>(0, 2) = getDerivativeProjectWrtPrincipalPoint(pose, pt3D);
+    ret.block<2, 2>(0, 0) = getDerivativeTransformProjectWrtScale(pose, pt3D);
+    ret.block<2, 2>(0, 2) = getDerivativeTransformProjectWrtPrincipalPoint(pose, pt3D);
 
     if (_pDistortion != nullptr)
     {
         const size_t distortionSize = _pDistortion->getDistortionParametersCount();
-        ret.block(0, 4, 2, distortionSize) = getDerivativeProjectWrtDisto(pose, pt3D);
+        ret.block(0, 4, 2, distortionSize) = getDerivativeTransformProjectWrtDisto(pose, pt3D);
     }
 
     return ret;
@@ -459,7 +483,7 @@ bool Equidistant::isVisibleRay(const Vec3& ray) const
     if (std::abs(angle) > 1.2 * (0.5 * fov))
         return false;
 
-    const Vec2 proj = project(Eigen::Matrix4d::Identity(), ray.homogeneous(), true);
+    const Vec2 proj = transformProject(Eigen::Matrix4d::Identity(), ray.homogeneous(), true);
     const Vec2 centered = proj - Vec2(_circleCenter(0), _circleCenter(1));
     return centered.norm() <= _circleRadius;
 }

@@ -93,9 +93,9 @@ class IntrinsicBase
      * @param[in] applyDistortion If true, apply the distortion if there is any
      * @return The 2D projection in the camera plane
      */
-    Vec2 project(const geometry::Pose3& pose, const Vec4& pt3D, bool applyDistortion = true) const
+    Vec2 transformProject(const geometry::Pose3& pose, const Vec4& pt3D, bool applyDistortion = true) const
     {
-        return project(pose.getHomogeneous(), pt3D, applyDistortion);
+        return transformProject(pose.getHomogeneous(), pt3D, applyDistortion);
     }
 
     /**
@@ -105,7 +105,15 @@ class IntrinsicBase
      * @param[in] applyDistortion If true, apply the distortion if there is any
      * @return The 2D projection in the camera plane
      */
-    virtual Vec2 project(const Eigen::Matrix4d& pose, const Vec4& pt3D, bool applyDistortion = true) const = 0;
+    virtual Vec2 transformProject(const Eigen::Matrix4d& pose, const Vec4& pt3D, bool applyDistortion = true) const = 0;
+
+    /**
+     * @brief Projection of a 3D point into the camera plane (Apply disto (if any) and Intrinsics)
+     * @param[in] pt3D The 3D point
+     * @param[in] applyDistortion If true, apply the distortion if there is any
+     * @return The 2D projection in the camera plane
+     */
+    virtual Vec2 project(const Vec4& pt3D, bool applyDistortion = true) const = 0;
 
     /**
      * @brief Back-projection of a 2D point at a specific depth into a 3D point
@@ -127,7 +135,7 @@ class IntrinsicBase
      * @param[in] pt3D The 3D point
      * @return The projection jacobian with respect to the pose
      */
-    virtual Eigen::Matrix<double, 2, 16> getDerivativeProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
+    virtual Eigen::Matrix<double, 2, 16> getDerivativeTransformProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
 
     /**
      * @brief Get the derivative of a projection of a 3D point into the camera plane
@@ -135,7 +143,7 @@ class IntrinsicBase
      * @param[in] pt3D The 3D point
      * @return The projection jacobian with respect to the pose
      */
-    virtual Eigen::Matrix<double, 2, 16> getDerivativeProjectWrtPoseLeft(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
+    virtual Eigen::Matrix<double, 2, 16> getDerivativeTransformProjectWrtPoseLeft(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
 
     /**
      * @brief Get the derivative of a projection of a 3D point into the camera plane
@@ -143,7 +151,7 @@ class IntrinsicBase
      * @param[in] pt3D The 3D point
      * @return The projection jacobian with respect to the point
      */
-    virtual Eigen::Matrix<double, 2, 4> getDerivativeProjectWrtPoint(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
+    virtual Eigen::Matrix<double, 2, 4> getDerivativeTransformProjectWrtPoint(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
 
     /**
      * @brief Get the derivative of a projection of a 3D point into the camera plane
@@ -151,7 +159,7 @@ class IntrinsicBase
      * @param[in] pt3D The 3D point
      * @return The projection jacobian with respect to the point
      */
-    virtual Eigen::Matrix<double, 2, 3> getDerivativeProjectWrtPoint3(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
+    virtual Eigen::Matrix<double, 2, 3> getDerivativeTransformProjectWrtPoint3(const Eigen::Matrix4d& pose, const Vec4& pt3D) const = 0;
 
     /**
      * @brief Get the derivative of a projection of a 3D point into the camera plane
@@ -159,7 +167,9 @@ class IntrinsicBase
      * @param[in] pt3D The 3D point
      * @return The projection jacobian with respect to the params
      */
-    virtual Eigen::Matrix<double, 2, Eigen::Dynamic> getDerivativeProjectWrtParams(const Eigen::Matrix4d& pos, const Vec4& pt3D) const = 0;
+    virtual Eigen::Matrix<double, 2, Eigen::Dynamic> getDerivativeTransformProjectWrtParams(const Eigen::Matrix4d& pos, const Vec4& pt3D) const = 0;
+
+    
 
     /**
      * @brief Compute the residual between the 3D projected point X and an image observation x
@@ -172,7 +182,7 @@ class IntrinsicBase
     inline Vec2 residual(const geometry::Pose3& pose, const Vec4& X, const Vec2& x, bool applyDistortion = true) const
     {
         // We will compare to an undistorted point, so always ignore the distortion when computing coordinates
-        const Vec2 proj = this->project(pose, X, false);
+        const Vec2 proj = this->transformProject(pose, X, false);
 
         return ((applyDistortion)?this->getUndistortedPixel(x):x) - proj;
     }

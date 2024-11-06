@@ -35,7 +35,7 @@ void Pinhole::setK(const Mat3& K)
     _offset(1) = K(1, 2) - static_cast<double>(_h) * 0.5;
 }
 
-Vec2 Pinhole::project(const Eigen::Matrix4d& pose, const Vec4& pt, bool applyDistortion) const
+Vec2 Pinhole::transformProject(const Eigen::Matrix4d& pose, const Vec4& pt, bool applyDistortion) const
 {
     const Vec4 X = pose * pt;  // apply pose
     const Vec2 P = X.head<2>() / X(2);
@@ -46,7 +46,17 @@ Vec2 Pinhole::project(const Eigen::Matrix4d& pose, const Vec4& pt, bool applyDis
     return impt;
 }
 
-Eigen::Matrix<double, 2, 9> Pinhole::getDerivativeProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt)
+Vec2 Pinhole::project(const Vec4& pt, bool applyDistortion) const
+{
+    const Vec2 P = pt.head<2>() / pt(2);
+
+    const Vec2 distorted = (applyDistortion)?this->addDistortion(P):P;
+    const Vec2 impt = this->cam2ima(distorted);
+
+    return impt;
+}
+
+Eigen::Matrix<double, 2, 9> Pinhole::getDerivativeTransformProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt)
 {
     const Vec4 X = pose * pt;  // apply pose
 
@@ -65,7 +75,7 @@ Eigen::Matrix<double, 2, 9> Pinhole::getDerivativeProjectWrtRotation(const Eigen
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_X * d_X_d_R;
 }
 
-Eigen::Matrix<double, 2, 16> Pinhole::getDerivativeProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 16> Pinhole::getDerivativeTransformProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     const Eigen::Matrix4d T = pose;
 
@@ -86,7 +96,7 @@ Eigen::Matrix<double, 2, 16> Pinhole::getDerivativeProjectWrtPose(const Eigen::M
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_X * d_X_d_T.block<3, 16>(0, 0);
 }
 
-Eigen::Matrix<double, 2, 16> Pinhole::getDerivativeProjectWrtPoseLeft(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 16> Pinhole::getDerivativeTransformProjectWrtPoseLeft(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     const Eigen::Matrix4d T = pose;
 
@@ -150,7 +160,7 @@ Eigen::Matrix<double, 2, 16> Pinhole::getDerivativeProjectWrtPoseLeft(const Eige
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_T;
 }
 
-Eigen::Matrix<double, 2, 4> Pinhole::getDerivativeProjectWrtPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 4> Pinhole::getDerivativeTransformProjectWrtPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     const Eigen::Matrix4d T = pose;
     const Vec4 X = T * pt;  // apply pose
@@ -172,7 +182,7 @@ Eigen::Matrix<double, 2, 4> Pinhole::getDerivativeProjectWrtPoint(const Eigen::M
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_X * d_X_d_P;
 }
 
-Eigen::Matrix<double, 2, 3> Pinhole::getDerivativeProjectWrtPoint3(const Eigen::Matrix4d& T, const Vec4& pt) const
+Eigen::Matrix<double, 2, 3> Pinhole::getDerivativeTransformProjectWrtPoint3(const Eigen::Matrix4d& T, const Vec4& pt) const
 {
     const Vec4 X = T * pt;  // apply pose
 
@@ -209,7 +219,7 @@ Eigen::Matrix<double, 2, 3> Pinhole::getDerivativeProjectWrtPoint3(const Eigen::
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtPt(P) * d_P_d_Pt;
 }
 
-Eigen::Matrix<double, 2, Eigen::Dynamic> Pinhole::getDerivativeProjectWrtDisto(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, Eigen::Dynamic> Pinhole::getDerivativeTransformProjectWrtDisto(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     const Vec4 X = pose * pt;  // apply pose
     const Vec2 P = X.head<2>() / X(2);
@@ -217,12 +227,12 @@ Eigen::Matrix<double, 2, Eigen::Dynamic> Pinhole::getDerivativeProjectWrtDisto(c
     return getDerivativeCam2ImaWrtPoint() * getDerivativeAddDistoWrtDisto(P);
 }
 
-Eigen::Matrix<double, 2, 2> Pinhole::getDerivativeProjectWrtPrincipalPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 2> Pinhole::getDerivativeTransformProjectWrtPrincipalPoint(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     return getDerivativeCam2ImaWrtPrincipalPoint();
 }
 
-Eigen::Matrix<double, 2, 2> Pinhole::getDerivativeProjectWrtScale(const Eigen::Matrix4d& pose, const Vec4& pt) const
+Eigen::Matrix<double, 2, 2> Pinhole::getDerivativeTransformProjectWrtScale(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     const Vec4 X = pose * pt;  // apply pose
     const Vec2 P = X.head<2>() / X(2);
@@ -232,17 +242,17 @@ Eigen::Matrix<double, 2, 2> Pinhole::getDerivativeProjectWrtScale(const Eigen::M
     return getDerivativeCam2ImaWrtScale(distorted);
 }
 
-Eigen::Matrix<double, 2, Eigen::Dynamic> Pinhole::getDerivativeProjectWrtParams(const Eigen::Matrix4d& pose, const Vec4& pt3D) const
+Eigen::Matrix<double, 2, Eigen::Dynamic> Pinhole::getDerivativeTransformProjectWrtParams(const Eigen::Matrix4d& pose, const Vec4& pt3D) const
 {
     Eigen::Matrix<double, 2, Eigen::Dynamic> ret(2, getParams().size());
 
-    ret.block<2, 2>(0, 0) = getDerivativeProjectWrtScale(pose, pt3D);
-    ret.block<2, 2>(0, 2) = getDerivativeProjectWrtPrincipalPoint(pose, pt3D);
+    ret.block<2, 2>(0, 0) = getDerivativeTransformProjectWrtScale(pose, pt3D);
+    ret.block<2, 2>(0, 2) = getDerivativeTransformProjectWrtPrincipalPoint(pose, pt3D);
 
     if (_pDistortion != nullptr)
     {
         const size_t distortionSize = _pDistortion->getDistortionParametersCount();
-        ret.block(0, 4, 2, distortionSize) = getDerivativeProjectWrtDisto(pose, pt3D);
+        ret.block(0, 4, 2, distortionSize) = getDerivativeTransformProjectWrtDisto(pose, pt3D);
     }
 
     return ret;

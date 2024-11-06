@@ -118,7 +118,7 @@ void createScene(sfmData::SfMData& sfmData, const camera::IntrinsicBase& intrins
                 continue;
             }
 
-            Vec2 imagept = intrinsic.project(pose, pt.homogeneous(), true);
+            Vec2 imagept = intrinsic.transformProject(pose, pt.homogeneous(), true);
             if (imagept.x() < 0 || imagept.y() < 0 || imagept.x() >= intrinsic.w() || imagept.y() >= intrinsic.h())
             {
                 continue;

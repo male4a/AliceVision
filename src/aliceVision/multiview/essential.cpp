@@ -202,8 +202,8 @@ bool estimateTransformStructureFromEssential(Mat4 & T,
             Vec3 X;
             multiview::TriangulateSphericalDLT(T1, pt3d1, T2, pt3d2, X);
 
-            Vec2 ptValid1 = cam1.project(T1, X.homogeneous(), true);
-            Vec2 ptValid2 = cam2.project(T2, X.homogeneous(), true);
+            Vec2 ptValid1 = cam1.transformProject(T1, X.homogeneous(), true);
+            Vec2 ptValid2 = cam2.transformProject(T2, X.homogeneous(), true);
 
             Eigen::Vector3d dirX1 = (T1 * X.homogeneous()).head(3).normalized();
             Eigen::Vector3d dirX2 = (T2 * X.homogeneous()).head(3).normalized();
