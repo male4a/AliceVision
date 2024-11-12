@@ -45,7 +45,6 @@ set(sfm_files_headers
   utils/syntheticScene.hpp
   LocalBundleAdjustmentGraph.hpp
   FrustumFilter.hpp
-  ResidualErrorFunctor.hpp
   filters.hpp
   generateReport.hpp
   sfm.hpp
