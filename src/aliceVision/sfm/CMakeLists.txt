@@ -2,13 +2,11 @@
 set(sfm_bundle_files_headers
   bundle/BundleAdjustment.hpp
   bundle/BundleAdjustmentCeres.hpp
-  bundle/BundleAdjustmentSymbolicCeres.hpp
 )
 
 # Sources
 set(sfm_bundle_files_sources
   bundle/BundleAdjustmentCeres.cpp
-  bundle/BundleAdjustmentSymbolicCeres.cpp
 )
 
 set(sfm_files_headers

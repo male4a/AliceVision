@@ -8,7 +8,6 @@
 
 #include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/sfm/bundle/BundleAdjustmentCeres.hpp>
-#include <aliceVision/sfm/bundle/BundleAdjustmentSymbolicCeres.hpp>
 #include <aliceVision/geometry/lie.hpp>
 #include <aliceVision/geometry/Intersection.hpp>
 #include <aliceVision/sfm/utils/statistics.hpp>
@@ -182,14 +181,14 @@ BOOST_AUTO_TEST_CASE(test_intrinsics)
 
         sfmData.getIntrinsics().at(0) = pairIntrinsics.second;
 
-        sfm::BundleAdjustmentSymbolicCeres::CeresOptions options;
+        sfm::BundleAdjustmentCeres::CeresOptions options;
         sfm::BundleAdjustment::ERefineOptions refineOptions = sfm::BundleAdjustment::REFINE_INTRINSICS_FOCAL |
                                                               sfm::BundleAdjustment::REFINE_INTRINSICS_OPTICALOFFSET_ALWAYS |
                                                               sfm::BundleAdjustment::REFINE_INTRINSICS_DISTORTION;
         options.summary = false;
 
         double rmseBefore = sfm::RMSE(sfmData);
-        sfm::BundleAdjustmentSymbolicCeres BA(options);
+        sfm::BundleAdjustmentCeres BA(options);
         const bool success = BA.adjust(sfmData, refineOptions);
         double rmseAfter = sfm::RMSE(sfmData);
 
@@ -217,12 +216,12 @@ BOOST_AUTO_TEST_CASE(test_landmarks)
             lpt.second.X += Eigen::Vector3d::Random() * 0.1;
         }
 
-        sfm::BundleAdjustmentSymbolicCeres::CeresOptions options;
+        sfm::BundleAdjustmentCeres::CeresOptions options;
         sfm::BundleAdjustment::ERefineOptions refineOptions = sfm::BundleAdjustment::REFINE_STRUCTURE;
         options.summary = false;
 
         double rmseBefore = sfm::RMSE(sfmData);
-        sfm::BundleAdjustmentSymbolicCeres BA(options);
+        sfm::BundleAdjustmentCeres BA(options);
         const bool success = BA.adjust(sfmData, refineOptions);
         double rmseAfter = sfm::RMSE(sfmData);
 
@@ -260,12 +259,12 @@ BOOST_AUTO_TEST_CASE(test_poses)
             lps.second.setTransform(geometry::Pose3(U * T));
         }
 
-        sfm::BundleAdjustmentSymbolicCeres::CeresOptions options;
+        sfm::BundleAdjustmentCeres::CeresOptions options;
         sfm::BundleAdjustment::ERefineOptions refineOptions = sfm::BundleAdjustment::REFINE_ROTATION | sfm::BundleAdjustment::REFINE_TRANSLATION;
         options.summary = false;
 
         double rmseBefore = sfm::RMSE(sfmData);
-        sfm::BundleAdjustmentSymbolicCeres BA(options);
+        sfm::BundleAdjustmentCeres BA(options);
         const bool success = BA.adjust(sfmData, refineOptions);
         double rmseAfter = sfm::RMSE(sfmData);
 

@@ -30,7 +30,7 @@
 
 #include <aliceVision/stl/mapUtils.hpp>
 #include <aliceVision/geometry/lie.hpp>
-#include <aliceVision/sfm/bundle/BundleAdjustmentSymbolicCeres.hpp>
+#include <aliceVision/sfm/bundle/BundleAdjustmentCeres.hpp>
 
 #include <cstdlib>
 #include <filesystem>
@@ -458,7 +458,7 @@ int aliceVision_main(int argc, char** argv)
     }
 
     // Refinment options
-    sfm::BundleAdjustmentSymbolicCeres::CeresOptions options;
+    sfm::BundleAdjustmentCeres::CeresOptions options;
     sfm::BundleAdjustment::ERefineOptions refineOptions =
       sfm::BundleAdjustment::REFINE_ROTATION | sfm::BundleAdjustment::REFINE_STRUCTURE | sfm::BundleAdjustment::REFINE_INTRINSICS_FOCAL |
       sfm::BundleAdjustment::REFINE_INTRINSICS_OPTICALOFFSET_ALWAYS | sfm::BundleAdjustment::REFINE_INTRINSICS_DISTORTION |
@@ -472,7 +472,7 @@ int aliceVision_main(int argc, char** argv)
     int countRemoved = 0;
     do
     {
-        sfm::BundleAdjustmentSymbolicCeres BA(options, 3);
+        sfm::BundleAdjustmentCeres BA(options, 3);
         const bool success = BA.adjust(sfmData, refineOptions);
         countRemoved = sfm::removeOutliersWithPixelResidualError(sfmData, sfm::EFeatureConstraint::SCALE, 2.0, 2);
     } while (countRemoved > 0);
