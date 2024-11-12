@@ -27,6 +27,15 @@ Vec3 IntrinsicBase::backprojectTransform(const Vec2& pt2D, bool applyUndistortio
     return output;
 }
 
+Vec3 IntrinsicBase::backProjectUnit(const Vec2& pt2D) const
+{
+    const Vec2 ptMeters = ima2cam(pt2D);
+    const Vec2 ptUndist = removeDistortion(ptMeters);
+    const Vec3 ptSphere = toUnitSphere(ptUndist);
+
+    return ptSphere;
+}
+
 Vec4 IntrinsicBase::getCartesianfromSphericalCoordinates(const Vec3& pt)
 {
     Vec4 rpt;

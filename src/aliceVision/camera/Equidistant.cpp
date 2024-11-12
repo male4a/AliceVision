@@ -460,6 +460,27 @@ Eigen::Matrix<double, 3, 2> Equidistant::getDerivativetoUnitSphereWrtScale(const
     return d_ret_d_angles * d_angles_d_fov * d_fov_d_scale;
 }
 
+Eigen::Matrix<double, 3, Eigen::Dynamic> Equidistant::getDerivativeBackProjectUnitWrtParams(const Vec2& pt2D) const 
+{
+    size_t disto_size = getDistortionParamsSize();
+
+    const Vec2 ptMeters = ima2cam(pt2D);
+    const Vec2 ptUndist = removeDistortion(ptMeters);
+    const Vec3 ptSphere = toUnitSphere(ptUndist);
+
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> J(3, getParams().size());
+
+    J.block<3, 2>(0, 0) = getDerivativetoUnitSphereWrtScale(ptUndist);
+    J.block<3, 2>(0, 2) = getDerivativetoUnitSphereWrtPoint(ptUndist) * getDerivativeRemoveDistoWrtPt(ptMeters) * getDerivativeIma2CamWrtPrincipalPoint();
+
+    if (disto_size > 0)
+    {
+        J.block(0, 4, 3, disto_size) = getDerivativetoUnitSphereWrtPoint(ptUndist) * getDerivativeRemoveDistoWrtDisto(ptMeters);
+    }
+
+    return J;
+}
+
 double Equidistant::imagePlaneToCameraPlaneError(double value) const { return value / _scale(0); }
 
 Vec2 Equidistant::cam2ima(const Vec2& p) const { return _circleRadius * p + getPrincipalPoint(); }

@@ -56,7 +56,7 @@ Vec2 Pinhole::project(const Vec4& pt, bool applyDistortion) const
     return impt;
 }
 
-Eigen::Matrix<double, 2, 9> Pinhole::getDerivativeTransformProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt)
+Eigen::Matrix<double, 2, 9> Pinhole::getDerivativeTransformProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt) const
 {
     const Vec4 X = pose * pt;  // apply pose
 
@@ -280,6 +280,29 @@ Eigen::Matrix<double, 3, 2> Pinhole::getDerivativetoUnitSphereWrtPoint(const Vec
     d_ptcam_d_pt(2, 1) = 0.0;
 
     return (norm * d_ptcam_d_pt - ptcam * d_norm_d_pt) / norm2;
+}
+
+Eigen::Matrix<double, 3, Eigen::Dynamic> Pinhole::getDerivativeBackProjectUnitWrtParams(const Vec2& pt2D) const 
+{
+    size_t disto_size = getDistortionParamsSize();
+
+    const Vec2 ptMeters = ima2cam(pt2D);
+    const Vec2 ptUndist = removeDistortion(ptMeters);
+    const Vec3 ptSphere = toUnitSphere(ptUndist);
+
+
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> J(3, getParams().size());
+
+    J.block<3, 2>(0, 0) = getDerivativetoUnitSphereWrtPoint(ptUndist) * getDerivativeRemoveDistoWrtPt(ptMeters) * getDerivativeIma2CamWrtScale(pt2D);
+    J.block<3, 2>(0, 2) = getDerivativetoUnitSphereWrtPoint(ptUndist) * getDerivativeRemoveDistoWrtPt(ptMeters) * getDerivativeIma2CamWrtPrincipalPoint();
+
+    if (disto_size > 0)
+    {
+        J.block(0, 4, 3, disto_size) = getDerivativetoUnitSphereWrtPoint(ptUndist) * getDerivativeRemoveDistoWrtDisto(ptMeters);
+    }
+
+
+    return J;
 }
 
 double Pinhole::imagePlaneToCameraPlaneError(double value) const { return value / _scale(0); }

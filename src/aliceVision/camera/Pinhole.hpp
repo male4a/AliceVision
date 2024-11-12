@@ -72,7 +72,7 @@ class Pinhole : public IntrinsicScaleOffsetDisto
 
     Vec2 project(const Vec4& pt, bool applyDistortion = true) const override;
 
-    Eigen::Matrix<double, 2, 9> getDerivativeTransformProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt);
+    Eigen::Matrix<double, 2, 9> getDerivativeTransformProjectWrtRotation(const Eigen::Matrix4d& pose, const Vec4& pt) const override;
 
     Eigen::Matrix<double, 2, 16> getDerivativeTransformProjectWrtPose(const Eigen::Matrix4d& pose, const Vec4& pt) const override;
 
@@ -93,6 +93,13 @@ class Pinhole : public IntrinsicScaleOffsetDisto
     Vec3 toUnitSphere(const Vec2& pt) const override;
 
     Eigen::Matrix<double, 3, 2> getDerivativetoUnitSphereWrtPoint(const Vec2& pt) const;
+
+     /**
+     * @brief Get the derivative of the unit sphere backprojection
+     * @param[in] pt2D The 2D point
+     * @return The backproject jacobian with respect to the pose
+     */
+    Eigen::Matrix<double, 3, Eigen::Dynamic> getDerivativeBackProjectUnitWrtParams(const Vec2& pt2D) const override;
 
     double imagePlaneToCameraPlaneError(double value) const override;
 
