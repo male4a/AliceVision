@@ -123,7 +123,7 @@ class IntrinsicBase
      * @param[in] depth The depth
      * @return The 3D point
      */
-    Vec3 backproject(const Vec2& pt2D, bool applyUndistortion = true, const geometry::Pose3& pose = geometry::Pose3(), double depth = 1.0) const;
+    Vec3 backprojectTransform(const Vec2& pt2D, bool applyUndistortion = true, const geometry::Pose3& pose = geometry::Pose3(), double depth = 1.0) const;
 
     Vec4 getCartesianfromSphericalCoordinates(const Vec3& pt);
 

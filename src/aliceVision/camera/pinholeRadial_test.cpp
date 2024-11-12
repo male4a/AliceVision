@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(cameraPinholeRadial_disto_undisto_K1)
         const double depth_gt = std::abs(Vec2::Random()(0)) * 100.0;
         const geometry::Pose3 pose(geometry::randomPose());
 
-        const Vec3 pt3d = cam->backproject(ptImage_gt, true, pose, depth_gt);
+        const Vec3 pt3d = cam->backprojectTransform(ptImage_gt, true, pose, depth_gt);
         const Vec2 pt2d_proj = cam->transformProject(pose, pt3d.homogeneous(), true);
 
         EXPECT_MATRIX_NEAR(ptImage_gt, pt2d_proj, epsilon);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(cameraPinholeRadial_disto_undisto_K3)
         const double depth_gt = std::abs(Vec2::Random()(0)) * 100.0;
         const geometry::Pose3 pose(geometry::randomPose());
 
-        const Vec3 pt3d = cam->backproject(ptImage_gt, true, pose, depth_gt);
+        const Vec3 pt3d = cam->backprojectTransform(ptImage_gt, true, pose, depth_gt);
         const Vec2 pt2d_proj = cam->transformProject(pose, pt3d.homogeneous(), true);
 
         EXPECT_MATRIX_NEAR(ptImage_gt, pt2d_proj, epsilon);

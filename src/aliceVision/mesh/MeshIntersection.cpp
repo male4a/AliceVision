@@ -31,7 +31,7 @@ bool MeshIntersection::initialize(const std::string & pathToModel)
 bool MeshIntersection::peekPoint(Vec3 & output, const camera::IntrinsicBase & intrinsic, const Vec2 & imageCoords)
 {
     const Vec3 posCamera = _pose.center();
-    const Vec3 wdir = intrinsic.backproject(imageCoords, true, _pose, 1.0);
+    const Vec3 wdir = intrinsic.backprojectTransform(imageCoords, true, _pose, 1.0);
     const Vec3 dir = (wdir - posCamera).normalized();
     
     //Create geogram ray from alicevision ray
@@ -61,7 +61,7 @@ bool MeshIntersection::peekPoint(Vec3 & output, const camera::IntrinsicBase & in
 bool MeshIntersection::peekNormal(Vec3 & output, const camera::IntrinsicBase & intrinsic, const Vec2 & imageCoords)
 {
     const Vec3 posCamera = _pose.center();
-    const Vec3 wdir = intrinsic.backproject(imageCoords, true, _pose, 1.0);
+    const Vec3 wdir = intrinsic.backprojectTransform(imageCoords, true, _pose, 1.0);
     const Vec3 dir = (wdir - posCamera).normalized();
     
     //Create geogram ray from alicevision ray

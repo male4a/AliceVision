@@ -917,12 +917,12 @@ bool ReconstructionEngine_panorama::buildLandmarks()
         const sfmData::View& v1 = _sfmData.getView(c.ViewFirst);
         const std::shared_ptr<camera::IntrinsicBase> cam1 = _sfmData.getIntrinsicSharedPtr(v1.getIntrinsicId());
         const sfmData::CameraPose pose1 = _sfmData.getPose(v1);
-        const Vec3 wpt1 = cam1->backproject(c.ObservationFirst.getCoordinates(), true, pose1.getTransform(), 1.0);
+        const Vec3 wpt1 = cam1->backprojectTransform(c.ObservationFirst.getCoordinates(), true, pose1.getTransform(), 1.0);
 
         const sfmData::View& v2 = _sfmData.getView(c.ViewSecond);
         const std::shared_ptr<camera::IntrinsicBase> cam2 = _sfmData.getIntrinsicSharedPtr(v2.getIntrinsicId());
         const sfmData::CameraPose pose2 = _sfmData.getPose(v2);
-        const Vec3 wpt2 = cam2->backproject(c.ObservationSecond.getCoordinates(), true, pose2.getTransform(), 1.0);
+        const Vec3 wpt2 = cam2->backprojectTransform(c.ObservationSecond.getCoordinates(), true, pose2.getTransform(), 1.0);
 
         // Store landmark
         Landmark l;
