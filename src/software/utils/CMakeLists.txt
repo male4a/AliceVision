@@ -218,6 +218,19 @@ if(ALICEVISION_BUILD_SFM)
               Boost::program_options
     )
 
+    # SfM Merge
+    alicevision_add_software(aliceVision_sfmPoseInjecting
+        SOURCE main_sfmPoseInjecting.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              aliceVision_sfm
+              Boost::program_options
+              Boost::json
+    )
+
     # SfM Regression
     alicevision_add_software(aliceVision_sfmRegression
         SOURCE main_sfmRegression.cpp
