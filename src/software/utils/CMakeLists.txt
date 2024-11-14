@@ -218,7 +218,7 @@ if(ALICEVISION_BUILD_SFM)
               Boost::program_options
     )
 
-    # SfM Merge
+    # SfM Pose Injecting
     alicevision_add_software(aliceVision_sfmPoseInjecting
         SOURCE main_sfmPoseInjecting.cpp
         FOLDER ${FOLDER_SOFTWARE_UTILS}

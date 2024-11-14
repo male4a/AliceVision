@@ -25,7 +25,7 @@
 using namespace aliceVision;
 namespace po = boost::program_options;
 
-struct poseInput
+struct PoseInput
 {
     IndexT frameId;
     Eigen::Matrix4d T;
@@ -33,7 +33,7 @@ struct poseInput
 
 /**
  * I/O for Rotation format choice
-*/
+ */
 
 enum class ERotationFormat
 {
@@ -62,9 +62,9 @@ inline ERotationFormat ERotationFormat_stringToEnum(const std::string& format)
     throw std::out_of_range("Invalid RotationFormat type Enum: " + format);
 }
 
-inline std::ostream& operator<<(std::ostream& os, ERotationFormat s) 
-{ 
-    return os << ERotationFormat_enumToString(s); 
+inline std::ostream& operator<<(std::ostream& os, ERotationFormat s)
+{
+    return os << ERotationFormat_enumToString(s);
 }
 
 inline std::istream& operator>>(std::istream& in, ERotationFormat& s)
@@ -74,21 +74,20 @@ inline std::istream& operator>>(std::istream& in, ERotationFormat& s)
     return in;
 }
 
-
 /**
  * @brief get a pose from a boost json object (assume the file format is ok)
  * @param obj the input json object
  * @param format the required rotation format to transform to rotation matrix
  * @param readPose the output pose information
  * @return false if the process failed
-*/
-bool getPoseFromJson(const boost::json::object& obj, ERotationFormat format, poseInput & readPose)
+ */
+bool getPoseFromJson(const boost::json::object& obj, ERotationFormat format, PoseInput& readPose)
 {
     Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
 
     if (format == ERotationFormat::EulerZXY)
     {
-        //Reading information from lineup
+        // Reading information from lineup
         const double rx = degreeToRadian(boost::json::value_to<double>(obj.at("rx")));
         const double ry = degreeToRadian(boost::json::value_to<double>(obj.at("ry")));
         const double rz = degreeToRadian(boost::json::value_to<double>(obj.at("rz")));
@@ -97,9 +96,9 @@ bool getPoseFromJson(const boost::json::object& obj, ERotationFormat format, pos
         Eigen::AngleAxisd Ry(ry, Eigen::Vector3d::UnitY());
         Eigen::AngleAxisd Rz(rz, Eigen::Vector3d::UnitZ());
 
-        R = Ry.toRotationMatrix() * Rx.toRotationMatrix() * Rz.toRotationMatrix();   
+        R = Ry.toRotationMatrix() * Rx.toRotationMatrix() * Rz.toRotationMatrix();
     }
-    else 
+    else
     {
         return false;
     }
@@ -114,19 +113,19 @@ bool getPoseFromJson(const boost::json::object& obj, ERotationFormat format, pos
     readPose.T = Eigen::Matrix4d::Identity();
     readPose.T.block<3, 3>(0, 0) = R;
     readPose.T.block<3, 1>(0, 3) = t;
-    
+
     return true;
 }
 
 /**
- * @brief get a set of poses from a json file (assume the file format is ok)
- * Json file contains an array of objects. Each object describes a frameId, a rotation and a translation.
- * @param obj the input json filename
+ * @brief Get a set of poses from a JSON file (assumes the file format is ok).
+ * The JSON file contains an array of objects. Each object describes a frameId, a rotation and a translation.
+ * @param posesFilename the input JSON filename
  * @param format the required rotation format to transform to rotation matrix
  * @param readPose the output poses vector
- * @return false if the process failed
-*/
-bool getPosesFromJson(const std::string & posesFilename, ERotationFormat format, std::vector<poseInput> & readPoses)
+ * @return false if the process failed, true otherwise
+ */
+bool getPosesFromJson(const std::string& posesFilename, ERotationFormat format, std::vector<PoseInput>& readPoses)
 {
     std::ifstream inputfile(posesFilename);
     if (!inputfile.is_open())
@@ -149,7 +148,7 @@ bool getPosesFromJson(const std::string & posesFilename, ERotationFormat format,
     {
         const boost::json::object& obj = item.as_object();
 
-        poseInput input;
+        PoseInput input;
         if (getPoseFromJson(obj, format, input))
         {
             readPoses.push_back(input);
@@ -166,48 +165,51 @@ int aliceVision_main(int argc, char** argv)
     std::string sfmDataOutputFilename;
     std::string posesFilename;
     ERotationFormat format;
-    
 
+    // clang-format off
     po::options_description requiredParams("Required parameters");
     requiredParams.add_options()
-    ("input,i", po::value<std::string>(&sfmDataFilename)->required(), "SfMData file.")
-    ("output,o", po::value<std::string>(&sfmDataOutputFilename)->required(), "SfMData output file.")
-    ("posesFilename,p", po::value<std::string>(&posesFilename)->required(), "Poses file.")
-    ("rotationFormat,r", po::value<ERotationFormat>(&format)->required(), "Poses file.");
-    
+        ("input,i", po::value<std::string>(&sfmDataFilename)->required(),
+         "Input SfMData file.")
+        ("output,o", po::value<std::string>(&sfmDataOutputFilename)->required(),
+         "SfMData output file with the injected poses.")
+        ("posesFilename,p", po::value<std::string>(&posesFilename)->required(),
+         "JSON file containing the poses to inject.")
+        ("rotationFormat,r", po::value<ERotationFormat>(&format)->required(),
+         "Rotation format for the input poses: EulerZXY.");
+    // clang-format on
 
     CmdLine cmdline("AliceVision SfM Pose injecting");
 
     cmdline.add(requiredParams);
-    if(!cmdline.execute(argc, argv))
+    if (!cmdline.execute(argc, argv))
     {
         return EXIT_FAILURE;
     }
 
-    // set maxThreads
+    // Set maxThreads
     HardwareContext hwc = cmdline.getHardwareContext();
     omp_set_num_threads(hwc.getMaxThreads());
-    
-    // load input SfMData scene
+
+    // Load input SfMData scene
     sfmData::SfMData sfmData;
-    if(!sfmDataIO::load(sfmData, sfmDataFilename, sfmDataIO::ESfMData::ALL))
+    if (!sfmDataIO::load(sfmData, sfmDataFilename, sfmDataIO::ESfMData::ALL))
     {
         ALICEVISION_LOG_ERROR("The input SfMData file '" + sfmDataFilename + "' cannot be read.");
         return EXIT_FAILURE;
     }
 
-    std::vector<poseInput> readPoses;
+    std::vector<PoseInput> readPoses;
     if (!getPosesFromJson(posesFilename, format, readPoses))
     {
         ALICEVISION_LOG_ERROR("Cannot read the poses");
         return EXIT_FAILURE;
     }
 
-
-    //Set the pose for all views with frame Ids found in the json file
-    for (const auto & [id, pview] : sfmData.getViews())
+    // Set the pose for all the views with frame IDs found in the JSON file
+    for (const auto& [id, pview] : sfmData.getViews())
     {
-        for (const auto & rpose : readPoses)
+        for (const auto& rpose : readPoses)
         {
             if (pview->getFrameId() == rpose.frameId)
             {
