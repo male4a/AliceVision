@@ -6,7 +6,6 @@
 
 #include "SfmBundle.hpp"
 #include <aliceVision/sfm/sfmFilters.hpp>
-#include <aliceVision/sfm/bundle/BundleAdjustmentSymbolicCeres.hpp>
 #include <aliceVision/sfm/bundle/BundleAdjustmentCeres.hpp>
 
 namespace aliceVision {
@@ -14,7 +13,7 @@ namespace sfm {
 
 bool SfmBundle::process(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewIds)
 {   
-    BundleAdjustmentSymbolicCeres::CeresOptions options;
+    BundleAdjustmentCeres::CeresOptions options;
     BundleAdjustment::ERefineOptions refineOptions;
 
     refineOptions |= BundleAdjustment::REFINE_ROTATION; 
@@ -28,7 +27,7 @@ bool SfmBundle::process(sfmData::SfMData & sfmData, const track::TracksHandler &
     }
 
     options.setSparseBA();
-    BundleAdjustmentSymbolicCeres bundleObject(options, _minNbCamerasToRefinePrincipalPoint);
+    BundleAdjustmentCeres bundleObject(options, _minNbCamerasToRefinePrincipalPoint);
 
     //Repeat until nothing change
     do 

@@ -6,9 +6,9 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <aliceVision/sfm/bundle/BundleAdjustmentCeres.hpp>
-#include <aliceVision/sfm/ResidualErrorFunctor.hpp>
-#include <aliceVision/sfm/ResidualErrorConstraintFunctor.hpp>
-#include <aliceVision/sfm/ResidualErrorRotationPriorFunctor.hpp>
+#include <aliceVision/sfm/bundle/costfunctions/constraint2d.hpp>
+#include <aliceVision/sfm/bundle/costfunctions/projection.hpp>
+#include <aliceVision/sfm/bundle/costfunctions/rotationPrior.hpp>
 #include <aliceVision/sfm/bundle/manifolds/intrinsics.hpp>
 #include <aliceVision/sfmData/SfMData.hpp>
 #include <aliceVision/alicevision_omp.hpp>
@@ -35,59 +35,34 @@ using namespace aliceVision::geometry;
  * @param[in] observation The corresponding observation
  * @return cost functor
  */
-ceres::CostFunction* createCostFunctionFromIntrinsics(const IntrinsicBase* intrinsicPtr, const sfmData::Observation& observation)
+ceres::CostFunction* createCostFunctionFromIntrinsics(const std::shared_ptr<IntrinsicBase> intrinsic, const sfmData::Observation& observation)
 {
-    int w = intrinsicPtr->w();
-    int h = intrinsicPtr->h();
-
     // Apply undistortion to observation
     sfmData::Observation obsUndistorted = observation;
-    const camera::IntrinsicScaleOffsetDisto* intrinsicDistortionPtr = dynamic_cast<const camera::IntrinsicScaleOffsetDisto*>(intrinsicPtr);
-    if (intrinsicDistortionPtr)
+    std::shared_ptr<camera::IntrinsicScaleOffsetDisto> intrinsicDistortion = std::dynamic_pointer_cast<camera::IntrinsicScaleOffsetDisto>(intrinsic);
+    if (intrinsicDistortion)
     {
-        auto undistortion = intrinsicDistortionPtr->getUndistortion();
+        auto undistortion = intrinsicDistortion->getUndistortion();
         if (undistortion)
         {
             obsUndistorted.setCoordinates(undistortion->undistort(observation.getCoordinates()));
 
-            if (intrinsicDistortionPtr->getDistortion() != nullptr)
+            if (intrinsicDistortion->getDistortion() != nullptr)
             {
                 throw std::runtime_error("Distortion should not be there when undistortion exists");
             }
         }
     }
+  
 
-    camera::EDISTORTION distoType = camera::getDistortionType(*intrinsicPtr);
+    auto costFunction = new ceres::DynamicAutoDiffCostFunction<ProjectionSimpleErrorFunctor>(new ProjectionSimpleErrorFunctor(obsUndistorted, intrinsic));
 
-    if (intrinsicPtr->getType() == EINTRINSIC::PINHOLE_CAMERA)
-    {
-        switch (distoType)
-        {
-            case EDISTORTION::DISTORTION_NONE:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole, 2, 4, 6, 3>(new ResidualErrorFunctor_Pinhole(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_RADIALK1:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeRadialK1, 2, 5, 6, 3>(
-                new ResidualErrorFunctor_PinholeRadialK1(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_RADIALK3:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeRadialK3, 2, 7, 6, 3>(
-                new ResidualErrorFunctor_PinholeRadialK3(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_BROWN:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeBrownT2, 2, 9, 6, 3>(
-                new ResidualErrorFunctor_PinholeBrownT2(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_FISHEYE:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeFisheye, 2, 8, 6, 3>(
-                new ResidualErrorFunctor_PinholeFisheye(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_FISHEYE1:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeFisheye1, 2, 5, 6, 3>(
-                new ResidualErrorFunctor_PinholeFisheye1(w, h, obsUndistorted));
-            default:
-                throw std::logic_error("Cannot create cost function, unrecognized intrinsic type in BA.");
-        }
-    }
-    else 
-    {
-        throw std::logic_error("Cannot create cost function, unrecognized intrinsic type in BA.");
-    }
+    costFunction->AddParameterBlock(intrinsic->getParams().size());
+    costFunction->AddParameterBlock(6);
+    costFunction->AddParameterBlock(3);
+    costFunction->SetNumResiduals(2);
+
+    return costFunction;
 }
 
 /**
@@ -96,55 +71,35 @@ ceres::CostFunction* createCostFunctionFromIntrinsics(const IntrinsicBase* intri
  * @param[in] observation The corresponding observation
  * @return cost functor
  */
-ceres::CostFunction* createRigCostFunctionFromIntrinsics(const IntrinsicBase* intrinsicPtr, const sfmData::Observation& observation)
+ceres::CostFunction* createRigCostFunctionFromIntrinsics(std::shared_ptr<IntrinsicBase> intrinsic, const sfmData::Observation& observation)
 {
-    int w = intrinsicPtr->w();
-    int h = intrinsicPtr->h();
-
     // Apply undistortion to observation
     sfmData::Observation obsUndistorted = observation;
-    const camera::IntrinsicScaleOffsetDisto* intrinsicDistortionPtr = dynamic_cast<const camera::IntrinsicScaleOffsetDisto*>(intrinsicPtr);
-    if (intrinsicDistortionPtr)
+    std::shared_ptr<camera::IntrinsicScaleOffsetDisto> intrinsicDistortion = std::dynamic_pointer_cast<camera::IntrinsicScaleOffsetDisto>(intrinsic);
+    if (intrinsicDistortion)
     {
-        auto undistortion = intrinsicDistortionPtr->getUndistortion();
+        auto undistortion = intrinsicDistortion->getUndistortion();
         if (undistortion)
         {
             obsUndistorted.setCoordinates(undistortion->undistort(observation.getCoordinates()));
+
+            if (intrinsicDistortion->getDistortion() != nullptr)
+            {
+                throw std::runtime_error("Distortion should not be there when undistortion exists");
+            }
         }
     }
+  
 
-    camera::EDISTORTION distoType = camera::getDistortionType(*intrinsicPtr);
+    auto costFunction = new ceres::DynamicAutoDiffCostFunction<ProjectionErrorFunctor>(new ProjectionErrorFunctor(obsUndistorted, intrinsic));
 
-    if (intrinsicPtr->getType() == EINTRINSIC::PINHOLE_CAMERA)
-    {
-        switch (distoType)
-        {
-            case EDISTORTION::DISTORTION_NONE:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_Pinhole, 2, 4, 6, 6, 3>(
-                new ResidualErrorFunctor_Pinhole(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_RADIALK1:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeRadialK1, 2, 5, 6, 6, 3>(
-                new ResidualErrorFunctor_PinholeRadialK1(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_RADIALK3:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeRadialK3, 2, 7, 6, 6, 3>(
-                new ResidualErrorFunctor_PinholeRadialK3(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_BROWN:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeBrownT2, 2, 9, 6, 6, 3>(
-                new ResidualErrorFunctor_PinholeBrownT2(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_FISHEYE:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeFisheye, 2, 8, 6, 6, 3>(
-                new ResidualErrorFunctor_PinholeFisheye(w, h, obsUndistorted));
-            case EDISTORTION::DISTORTION_FISHEYE1:
-                return new ceres::AutoDiffCostFunction<ResidualErrorFunctor_PinholeFisheye1, 2, 5, 6, 6, 3>(
-                new ResidualErrorFunctor_PinholeFisheye1(w, h, obsUndistorted));
-            default:
-                throw std::logic_error("Cannot create rig cost function, unrecognized intrinsic type in BA.");
-        }
-    }
-    else 
-    {
-        throw std::logic_error("Cannot create rig cost function, unrecognized intrinsic type in BA.");
-    }
+    costFunction->AddParameterBlock(intrinsic->getParams().size());
+    costFunction->AddParameterBlock(6);
+    costFunction->AddParameterBlock(6);
+    costFunction->AddParameterBlock(3);
+    costFunction->SetNumResiduals(2);
+
+    return costFunction;
 }
 
 /**
@@ -153,61 +108,18 @@ ceres::CostFunction* createRigCostFunctionFromIntrinsics(const IntrinsicBase* in
  * @param[in] observation The corresponding observation
  * @return cost functor
  */
-ceres::CostFunction* createConstraintsCostFunctionFromIntrinsics(const IntrinsicBase* intrinsicPtr,
-                                                                 const Vec2& observation_first,
-                                                                 const Vec2& observation_second)
-{
-    double radius = 0.0;
-    const camera::Equidistant* equi = dynamic_cast<const camera::Equidistant*>(intrinsicPtr);
-    if (equi)
-    {
-        radius = equi->getCircleRadius();
-    }
+ceres::CostFunction* createConstraintsCostFunctionFromIntrinsics(std::shared_ptr<IntrinsicBase> intrinsic,
+                                                                 const sfmData::Observation& observation_first,
+                                                                 const sfmData::Observation& observation_second)
+{       
+    auto costFunction = new ceres::DynamicAutoDiffCostFunction<Constraint2dErrorFunctor>(new Constraint2dErrorFunctor(observation_first, observation_second, intrinsic));
 
-    int w = intrinsicPtr->w();
-    int h = intrinsicPtr->h();
+    costFunction->AddParameterBlock(intrinsic->getParams().size()); 
+    costFunction->AddParameterBlock(6);
+    costFunction->AddParameterBlock(6);
+    costFunction->SetNumResiduals(2);
 
-    camera::EDISTORTION distoType = camera::getDistortionType(*intrinsicPtr);
-
-    if (intrinsicPtr->getType() == EINTRINSIC::PINHOLE_CAMERA)
-    {
-        switch (distoType)
-        {
-        case EDISTORTION::DISTORTION_NONE:
-            return new ceres::AutoDiffCostFunction<ResidualErrorConstraintFunctor_Pinhole, 2, 3, 6, 6>(
-              new ResidualErrorConstraintFunctor_Pinhole(w, h, observation_first.homogeneous(), observation_second.homogeneous()));
-        case EDISTORTION::DISTORTION_RADIALK1:
-            return new ceres::AutoDiffCostFunction<ResidualErrorConstraintFunctor_PinholeRadialK1, 2, 4, 6, 6>(
-              new ResidualErrorConstraintFunctor_PinholeRadialK1(w, h, observation_first.homogeneous(), observation_second.homogeneous()));
-        case EDISTORTION::DISTORTION_RADIALK3:
-            return new ceres::AutoDiffCostFunction<ResidualErrorConstraintFunctor_PinholeRadialK3, 2, 6, 6, 6>(
-              new ResidualErrorConstraintFunctor_PinholeRadialK3(w, h, observation_first.homogeneous(), observation_second.homogeneous()));
-        case EDISTORTION::DISTORTION_FISHEYE:
-            return new ceres::AutoDiffCostFunction<ResidualErrorConstraintFunctor_PinholeFisheye, 2, 7, 6, 6>(
-              new ResidualErrorConstraintFunctor_PinholeFisheye(w, h, observation_first.homogeneous(), observation_second.homogeneous()));
-        default:
-            throw std::logic_error("Cannot create cost function, unrecognized intrinsic type in BA.");
-        }
-    }
-    else if (intrinsicPtr->getType() == EINTRINSIC::EQUIDISTANT_CAMERA)
-    {
-        switch (distoType)
-        {
-        case EDISTORTION::DISTORTION_NONE:
-            return new ceres::AutoDiffCostFunction<ResidualErrorConstraintFunctor_Equidistant, 2, 3, 6, 6>(
-              new ResidualErrorConstraintFunctor_Equidistant(w, h, observation_first.homogeneous(), observation_second.homogeneous(), radius));
-        case EDISTORTION::DISTORTION_RADIALK3PT:
-            return new ceres::AutoDiffCostFunction<ResidualErrorConstraintFunctor_EquidistantRadialK3, 2, 6, 6, 6>(
-              new ResidualErrorConstraintFunctor_EquidistantRadialK3(
-                w, h, observation_first.homogeneous(), observation_second.homogeneous(), radius));
-        default:
-            throw std::logic_error("Cannot create cost function, unrecognized intrinsic type in BA.");
-        }
-    }
-    else 
-    {
-        throw std::logic_error("Cannot create cost function, unrecognized intrinsic type in BA.");
-    }
+    return costFunction;
 }
 
 void BundleAdjustmentCeres::CeresOptions::setDenseBA()
@@ -540,6 +452,8 @@ void BundleAdjustmentCeres::addIntrinsicsToProblem(const sfmData::SfMData& sfmDa
 
         assert(isValid(intrinsicPtr->getType()));
 
+        _intrinsicObjects[intrinsicId].reset(intrinsicPtr->clone());
+
         std::vector<double>& intrinsicBlock = _intrinsicsBlocks[intrinsicId];
         intrinsicBlock = intrinsicPtr->getParams();
 
@@ -571,7 +485,7 @@ void BundleAdjustmentCeres::addIntrinsicsToProblem(const sfmData::SfMData& sfmDa
         // refine the focal length
         if (!lockFocal)
         {
-            if (intrinsicScaleOffset->getInitialScale().x() > 0 && intrinsicScaleOffset->getInitialScale().y() > 0)
+            if (intrinsicScaleOffset->getInitialScale().x() > 0 && intrinsicScaleOffset->getInitialScale().y() > 0 && _ceresOptions.useFocalPrior)
             {
                 
                 // if we have an initial guess, we only authorize a margin around this value.
@@ -699,14 +613,11 @@ void BundleAdjustmentCeres::addLandmarksToProblem(const sfmData::SfMData& sfmDat
             // dimensional residual. Internally, the cost function stores the observed
             // image location and compares the reprojection against the observation.
             const auto& pose = sfmData.getPose(view);
-            const auto& intrinsic = sfmData.getIntrinsicSharedPtr(view);
-
-            assert(pose.getState() != EEstimatorParameterState::IGNORED);
-            assert(intrinsic->getState() != EEstimatorParameterState::IGNORED);
 
             // needed parameters to create a residual block (K, pose)
             double* poseBlockPtr = _posesBlocks.at(view.getPoseId()).data();
             double* intrinsicBlockPtr = _intrinsicsBlocks.at(view.getIntrinsicId()).data();
+            const std::shared_ptr<IntrinsicBase> intrinsic = _intrinsicObjects[view.getIntrinsicId()];
 
             // apply a specific parameter ordering:
             if (_ceresOptions.useParametersOrdering)
@@ -718,7 +629,7 @@ void BundleAdjustmentCeres::addLandmarksToProblem(const sfmData::SfMData& sfmDat
 
             if (view.isPartOfRig() && !view.isPoseIndependant())
             {
-                ceres::CostFunction* costFunction = createRigCostFunctionFromIntrinsics(sfmData.getIntrinsicPtr(view.getIntrinsicId()), observation);
+                ceres::CostFunction* costFunction = createRigCostFunctionFromIntrinsics(intrinsic, observation);
 
                 double* rigBlockPtr = _rigBlocks.at(view.getRigId()).at(view.getSubPoseId()).data();
                 _linearSolverOrdering.AddElementToGroup(rigBlockPtr, 1);
@@ -732,7 +643,7 @@ void BundleAdjustmentCeres::addLandmarksToProblem(const sfmData::SfMData& sfmDat
             }
             else
             {
-                ceres::CostFunction* costFunction = createCostFunctionFromIntrinsics(sfmData.getIntrinsicPtr(view.getIntrinsicId()), observation);
+                ceres::CostFunction* costFunction = createCostFunctionFromIntrinsics(intrinsic, observation);
 
                 problem.AddResidualBlock(costFunction,
                                          lossFunction,
@@ -782,12 +693,16 @@ void BundleAdjustmentCeres::addConstraints2DToProblem(const sfmData::SfMData& sf
         double* intrinsicBlockPtr_1 = _intrinsicsBlocks.at(view_1.getIntrinsicId()).data();
         double* intrinsicBlockPtr_2 = _intrinsicsBlocks.at(view_2.getIntrinsicId()).data();
 
+        const std::shared_ptr<IntrinsicBase> intrinsicObject1 = _intrinsicObjects[view_1.getIntrinsicId()];
+        const std::shared_ptr<IntrinsicBase> intrinsicObject2 = _intrinsicObjects[view_2.getIntrinsicId()];
+
         // For the moment assume a unique camera
         assert(intrinsicBlockPtr_1 == intrinsicBlockPtr_2);
 
-        ceres::CostFunction* costFunction = createConstraintsCostFunctionFromIntrinsics(sfmData.getIntrinsicPtr(view_1.getIntrinsicId()),
-                                                                                        constraint.ObservationFirst.getCoordinates(),
-                                                                                        constraint.ObservationSecond.getCoordinates());
+        ceres::CostFunction* costFunction = createConstraintsCostFunctionFromIntrinsics(intrinsicObject1,
+                                                                                        constraint.ObservationFirst,
+                                                                                        constraint.ObservationSecond);
+        
         problem.AddResidualBlock(costFunction, lossFunction, intrinsicBlockPtr_1, poseBlockPtr_1, poseBlockPtr_2);
     }
 }
@@ -813,7 +728,7 @@ void BundleAdjustmentCeres::addRotationPriorsToProblem(const sfmData::SfMData& s
         double* poseBlockPtr_2 = _posesBlocks.at(view_2.getPoseId()).data();
 
         ceres::CostFunction* costFunction =
-          new ceres::AutoDiffCostFunction<ResidualErrorRotationPriorFunctor, 3, 6, 6>(new ResidualErrorRotationPriorFunctor(prior._second_R_first));
+          new ceres::AutoDiffCostFunction<RotationPriorErrorFunctor, 3, 6, 6>(new RotationPriorErrorFunctor(prior._second_R_first));
         problem.AddResidualBlock(costFunction, lossFunction, poseBlockPtr_1, poseBlockPtr_2);
     }
 }
@@ -972,6 +887,7 @@ bool BundleAdjustmentCeres::adjust(sfmData::SfMData& sfmData, ERefineOptions ref
     // create problem
     ceres::Problem::Options problemOptions;
     problemOptions.loss_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
+    problemOptions.evaluation_callback = this;
     ceres::Problem problem(problemOptions);
     createProblem(sfmData, refineOptions, problem);
 
@@ -1007,6 +923,17 @@ bool BundleAdjustmentCeres::adjust(sfmData::SfMData& sfmData, ERefineOptions ref
     _statistics.RMSEfinal = std::sqrt(summary.final_cost / summary.num_residuals);
 
     return true;
+}
+
+void BundleAdjustmentCeres::PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point)
+{
+    if (new_evaluation_point)
+    {
+        for (const auto& pair : _intrinsicsBlocks)
+        {
+            _intrinsicObjects[pair.first]->updateFromParams(pair.second);
+        }
+    }
 }
 
 }  // namespace sfm

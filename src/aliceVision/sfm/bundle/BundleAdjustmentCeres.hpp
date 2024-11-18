@@ -12,6 +12,8 @@
 #include <aliceVision/sfm/bundle/BundleAdjustment.hpp>
 #include <aliceVision/sfm/LocalBundleAdjustmentGraph.hpp>
 #include <aliceVision/numeric/numeric.hpp>
+#include <aliceVision/sfmData/CameraPose.hpp>
+#include <aliceVision/camera/IntrinsicBase.hpp>
 
 #include <ceres/ceres.h>
 
@@ -25,7 +27,7 @@ class SfMData;
 
 namespace sfm {
 
-class BundleAdjustmentCeres : public BundleAdjustment
+class BundleAdjustmentCeres : public BundleAdjustment, ceres::EvaluationCallback
 {
   public:
     /**
@@ -55,6 +57,7 @@ class BundleAdjustmentCeres : public BundleAdjustment
         bool useParametersOrdering = true;
         bool summary = false;
         bool verbose = true;
+        bool useFocalPrior = true;
     };
 
     /**
@@ -133,6 +136,8 @@ class BundleAdjustmentCeres : public BundleAdjustment
      * @see BundleAdjustment::Adjust
      */
     bool adjust(sfmData::SfMData& sfmData, ERefineOptions refineOptions = REFINE_ALL);
+
+    virtual void PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point);
 
     /**
      * @brief Get bundle adjustment statistics structure
@@ -231,6 +236,7 @@ class BundleAdjustmentCeres : public BundleAdjustment
     /// intrinsics blocks wrapper
     /// block: intrinsics params
     std::map<IndexT, std::vector<double>> _intrinsicsBlocks;
+    std::map<IndexT, std::shared_ptr<camera::IntrinsicBase>> _intrinsicObjects;
     /// landmarks blocks wrapper
     /// block: 3d position(3)
     std::map<IndexT, std::array<double, 3>> _landmarksBlocks;

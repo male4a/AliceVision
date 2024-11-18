@@ -110,7 +110,7 @@ from pyalicevision import camera as av
 # - Vec2 project(geometry::Pose3& pose, Vec4& pt3D, bool applyDistortion = true) /
 #                    Vec2, Pose3 and Vec4 not binded
 # - Vec2 project(Eigen::Matrix4d& pose, Vec4& pt3D, bool applyDistortion = true)
-# - Vec3 backproject(Vec2& pt2D, bool applyUndistortion = true,
+# - Vec3 backprojectTransform(Vec2& pt2D, bool applyUndistortion = true,
 #                    geometry::Pose3& pose = geometry::Pose3(),
 #                    double depth = 1.0) / Vec3, Vec2 and Pose3 not binded
 # - Vec4 getCartesianfromSphericalCoordinates(Vec3& pt) / Vec3 not binded

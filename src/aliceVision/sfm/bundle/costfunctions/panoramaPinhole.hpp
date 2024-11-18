@@ -58,7 +58,7 @@ class CostPanoramaPinHole : public ceres::CostFunction
         Vec2 pt_i_undist = _intrinsic->removeDistortion(pt_i_cam);
         Vec4 pt_i_sphere = _intrinsic->toUnitSphere(pt_i_undist).homogeneous();
 
-        Vec2 pt_j_est = _intrinsic->project(T_pose3, pt_i_sphere, true);
+        Vec2 pt_j_est = _intrinsic->transformProject(T_pose3, pt_i_sphere, true);
 
         residuals[0] = pt_j_est(0) - pt_j(0);
         residuals[1] = pt_j_est(1) - pt_j(1);
@@ -72,7 +72,7 @@ class CostPanoramaPinHole : public ceres::CostFunction
         {
             Eigen::Map<Eigen::Matrix<double, 2, 16, Eigen::RowMajor>> J(jacobians[0]);
 
-            Eigen::Matrix<double, 2, 9> J9 = _intrinsic->getDerivativeProjectWrtRotation(T, pt_i_sphere) *
+            Eigen::Matrix<double, 2, 9> J9 = _intrinsic->getDerivativeTransformProjectWrtRotation(T, pt_i_sphere) *
                                              getJacobian_AB_wrt_B<3, 3, 3>(jRo, iRo.transpose()) * getJacobian_At_wrt_A<3, 3>() *
                                              getJacobian_AB_wrt_A<3, 3, 3>(Eigen::Matrix3d::Identity(), iRo);
 
@@ -86,7 +86,7 @@ class CostPanoramaPinHole : public ceres::CostFunction
         {
             Eigen::Map<Eigen::Matrix<double, 2, 16, Eigen::RowMajor>> J(jacobians[1]);
 
-            Eigen::Matrix<double, 2, 9> J9 = _intrinsic->getDerivativeProjectWrtRotation(T, pt_i_sphere) *
+            Eigen::Matrix<double, 2, 9> J9 = _intrinsic->getDerivativeTransformProjectWrtRotation(T, pt_i_sphere) *
                                              getJacobian_AB_wrt_A<3, 3, 3>(jRo, iRo.transpose()) *
                                              getJacobian_AB_wrt_A<3, 3, 3>(Eigen::Matrix3d::Identity(), jRo);
 
@@ -103,12 +103,12 @@ class CostPanoramaPinHole : public ceres::CostFunction
             Eigen::Matrix<double, 4, 3> Jhomogenous = Eigen::Matrix<double, 4, 3>::Identity();
 
             Eigen::Matrix<double, 2, 2> Jscale =
-              _intrinsic->getDerivativeProjectWrtScale(T, pt_i_sphere) +
-              _intrinsic->getDerivativeProjectWrtPoint(T, pt_i_sphere) * Jhomogenous * _intrinsic->getDerivativetoUnitSphereWrtPoint(pt_i_undist) *
+              _intrinsic->getDerivativeTransformProjectWrtScale(T, pt_i_sphere) +
+              _intrinsic->getDerivativeTransformProjectWrtPoint(T, pt_i_sphere) * Jhomogenous * _intrinsic->getDerivativetoUnitSphereWrtPoint(pt_i_undist) *
                 _intrinsic->getDerivativeRemoveDistoWrtPt(pt_i_cam) * _intrinsic->getDerivativeIma2CamWrtScale(pt_i);
             Eigen::Matrix<double, 2, 2> Jpp =
-              _intrinsic->getDerivativeProjectWrtPrincipalPoint(T, pt_i_sphere) +
-              _intrinsic->getDerivativeProjectWrtPoint(T, pt_i_sphere) * Jhomogenous * _intrinsic->getDerivativetoUnitSphereWrtPoint(pt_i_undist) *
+              _intrinsic->getDerivativeTransformProjectWrtPrincipalPoint(T, pt_i_sphere) +
+              _intrinsic->getDerivativeTransformProjectWrtPoint(T, pt_i_sphere) * Jhomogenous * _intrinsic->getDerivativetoUnitSphereWrtPoint(pt_i_undist) *
                 _intrinsic->getDerivativeRemoveDistoWrtPt(pt_i_cam) * _intrinsic->getDerivativeIma2CamWrtPrincipalPoint();
 
             J.block<2, 2>(0, 0) = Jscale;
@@ -117,7 +117,7 @@ class CostPanoramaPinHole : public ceres::CostFunction
             if (disto_size > 0)
             {
                 Eigen::Matrix<double, 2, Eigen::Dynamic> Jdisto =
-                _intrinsic->getDerivativeProjectWrtDisto(T, pt_i_sphere) + _intrinsic->getDerivativeProjectWrtPoint(T, pt_i_sphere) * Jhomogenous *
+                _intrinsic->getDerivativeTransformProjectWrtDisto(T, pt_i_sphere) + _intrinsic->getDerivativeTransformProjectWrtPoint(T, pt_i_sphere) * Jhomogenous *
                                                                            _intrinsic->getDerivativetoUnitSphereWrtPoint(pt_i_undist) *
                                                                            _intrinsic->getDerivativeRemoveDistoWrtDisto(pt_i_cam);
                 J.block(0, 4, 2, disto_size) = Jdisto;
