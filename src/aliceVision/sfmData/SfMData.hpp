@@ -287,13 +287,13 @@ class SfMData
      */
     bool isPoseAndIntrinsicDefined(const View & view) const
     {        
-        IndexT poseId = view.getPoseId();
+        const IndexT poseId = view.getPoseId();
         if (poseId == UndefinedIndexT)
         {
             return false;
         }
 
-        IndexT intrinsicId = view.getIntrinsicId();
+        const IndexT intrinsicId = view.getIntrinsicId();
         if (intrinsicId == UndefinedIndexT)
         {
             return false;
@@ -304,7 +304,7 @@ class SfMData
             return false;
         }
         
-        auto it = _poses.find(view.getPoseId());
+        auto it = _poses.find(poseId);
         if (it == _poses.end())
         {
             return false;

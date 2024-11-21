@@ -148,7 +148,7 @@ if(ALICEVISION_BUILD_SFM)
               Boost::json
     )
 
-    # Bootstraping SfM
+    # Global Rotation Estimating
     alicevision_add_software(aliceVision_globalRotationEstimating
         SOURCE main_globalRotationEstimating.cpp
         FOLDER ${FOLDER_SOFTWARE_PIPELINE}

@@ -6,7 +6,6 @@
 
 #include <aliceVision/types.hpp>
 
-#include <aliceVision/system/Timer.hpp>
 #include <aliceVision/system/Logger.hpp>
 #include <aliceVision/system/main.hpp>
 #include <aliceVision/cmdline/cmdline.hpp>
@@ -23,7 +22,6 @@
 #include <aliceVision/track/TracksHandler.hpp>
 #include <aliceVision/dataio/json.hpp>
 
-
 #include <boost/program_options.hpp>
 #include <filesystem>
 
@@ -39,7 +37,7 @@ namespace fs = std::filesystem;
 
 int aliceVision_main(int argc, char** argv)
 {
-    // command-line parameters
+    // Command-line parameters
     std::string sfmDataFilename;
     std::string sfmDataOutputFilename;
     std::string tracksFilename;
@@ -49,38 +47,48 @@ int aliceVision_main(int argc, char** argv)
     int randomSeed = std::mt19937::default_seed;
     double angularTolerance = 5.0;
 
+    // clang-format off
     po::options_description requiredParams("Required parameters");
     requiredParams.add_options()
-    ("input,i", po::value<std::string>(&sfmDataFilename)->required(), "SfMData file.")
-    ("output,o", po::value<std::string>(&sfmDataOutputFilename)->required(), "SfMData output file.")
-    ("tracksFilename,t", po::value<std::string>(&tracksFilename)->required(), "Tracks file.")
-    ("pairs,p", po::value<std::string>(&pairsDirectory)->required(), "Path to the pairs directory.");
+        ("input,i", po::value<std::string>(&sfmDataFilename)->required(),
+         "SfMData file.")
+        ("output,o", po::value<std::string>(&sfmDataOutputFilename)->required(),
+         "SfMData output file.")
+        ("tracksFilename,t", po::value<std::string>(&tracksFilename)->required(),
+         "Tracks file.")
+        ("pairs,p", po::value<std::string>(&pairsDirectory)->required(),
+         "Path to the pairs directory.");
 
     po::options_description optionalParams("Optional parameters");
     optionalParams.add_options()
-    ("rotationAveragingMethod", po::value<sfm::ERotationAveragingMethod>(&rotationAveragingMethod)->default_value(rotationAveragingMethod))
-    ("angularTolerance", po::value<double>(&angularTolerance)->default_value(angularTolerance));
+        ("rotationAveragingMethod", po::value<sfm::ERotationAveragingMethod>(&rotationAveragingMethod)->default_value(rotationAveragingMethod),
+         "Method for rotation averaging: \n"
+         "- L1_minimization: Use L1 minimization\n"
+         "- L2_minimization: Use L2 minimization")
+        ("angularTolerance", po::value<double>(&angularTolerance)->default_value(angularTolerance),
+         "Angular (in degrees) tolerance for a given triplet.");
+    // clang-format on
 
-    CmdLine cmdline("AliceVision SfM Bootstraping");
+    CmdLine cmdline("AliceVision Global Rotation Estimating");
 
     cmdline.add(requiredParams);
-    if(!cmdline.execute(argc, argv))
+    cmdline.add(optionalParams);
+    if (!cmdline.execute(argc, argv))
     {
         return EXIT_FAILURE;
     }
 
-    // set maxThreads
+    // Set maxThreads
     HardwareContext hwc = cmdline.getHardwareContext();
     omp_set_num_threads(hwc.getMaxThreads());
     
-    // load input SfMData scene
+    // Load input SfMData scene
     sfmData::SfMData sfmData;
     if(!sfmDataIO::load(sfmData, sfmDataFilename, sfmDataIO::ESfMData::ALL))
     {
         ALICEVISION_LOG_ERROR("The input SfMData file '" + sfmDataFilename + "' cannot be read.");
         return EXIT_FAILURE;
     }
-
 
     // Load tracks
     ALICEVISION_LOG_INFO("Load tracks");
@@ -91,8 +99,7 @@ int aliceVision_main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-
-    //Result of pair estimations are stored in multiple files
+    // Result of pair estimations are stored in multiple files
     std::vector<sfm::ReconstructedPair> reconstructedPairs;
     const std::regex regex("pairs\\_[0-9]+\\.json");
     for(const fs::directory_entry & file : boost::make_iterator_range(fs::directory_iterator(pairsDirectory), {}))
@@ -102,11 +109,11 @@ int aliceVision_main(int argc, char** argv)
             continue;
         }
 
-        std::ifstream inputfile(file.path().string());        
+        std::ifstream inputfile(file.path().string());
 
         boost::json::error_code ec;
         std::vector<boost::json::value> values = readJsons(inputfile, ec);
-        for (const boost::json::value & value : values)
+        for (const boost::json::value& value : values)
         {
             std::vector<sfm::ReconstructedPair> localVector = boost::json::value_to<std::vector<sfm::ReconstructedPair>>(value);
             reconstructedPairs.insert(reconstructedPairs.end(), localVector.begin(), localVector.end());
@@ -136,14 +143,13 @@ int aliceVision_main(int argc, char** argv)
     for (auto & item : globalRotations)
     {
         sfmData::CameraPose cp;
-        const geometry::Pose3 & p = cp.getTransform();
+        const geometry::Pose3& p = cp.getTransform();
         p.rotation() = item.second;
         cp.setRotationOnly(true);
 
         sfmData.getPoses()[item.first] = cp;
     }
 
-    
     sfmDataIO::save(sfmData, sfmDataOutputFilename, sfmDataIO::ESfMData::ALL);
 
     return EXIT_SUCCESS;
