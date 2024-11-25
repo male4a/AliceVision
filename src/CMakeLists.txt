@@ -176,15 +176,6 @@ macro(add_target_properties _target _name)
 endmacro(add_target_properties)
 
 # ==============================================================================
-# Check that submodule have been initialized and updated
-# ==============================================================================
-if(ALICEVISION_USE_MESHSDFILTER AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/MeshSDFilter/CMakeLists.txt)
-  message(FATAL_ERROR
-    "\n submodule(s) are missing, please update your repository:\n"
-    "  > git submodule update -i\n")
-endif()
-
-# ==============================================================================
 # Additional cmake find modules
 # ==============================================================================
 set(CMAKE_MODULE_PATH
