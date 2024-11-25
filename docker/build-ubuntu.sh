@@ -8,8 +8,8 @@ test -e docker/fetch.sh || {
 
 test -z "$AV_DEPS_VERSION" && AV_DEPS_VERSION=2024.10.22
 test -z "$AV_VERSION" && AV_VERSION="$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)"
-test -z "$CUDA_VERSION" && CUDA_VERSION=11.3.1
-test -z "$UBUNTU_VERSION" && UBUNTU_VERSION=20.04
+test -z "$CUDA_VERSION" && CUDA_VERSION=12.1.0
+test -z "$UBUNTU_VERSION" && UBUNTU_VERSION=22.04
 test -z "$REPO_OWNER" && REPO_OWNER=alicevision
 test -z "$DOCKER_REGISTRY" && DOCKER_REGISTRY=docker.io
 
