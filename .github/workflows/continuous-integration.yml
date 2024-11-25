@@ -39,7 +39,6 @@ jobs:
           mkdir ./build_as_3rdparty
           mkdir ./functional_tests
           mkdir ../AV_install
-          git submodule update -i
 
       - name: Configure CMake
         working-directory: ./build
