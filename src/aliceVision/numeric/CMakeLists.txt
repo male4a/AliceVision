@@ -5,6 +5,7 @@ set(numeric_files_headers
   projection.hpp
   gps.hpp
   algebra.hpp
+  BoxStats.hpp
 )
 
 # Sources
