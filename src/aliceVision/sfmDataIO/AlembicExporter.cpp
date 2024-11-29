@@ -111,6 +111,7 @@ void AlembicExporter::DataImpl::addCamera(const std::string& name,
     if (pose != nullptr)
     {
         OBoolProperty(userProps, "mvg_poseLocked").set(pose->isLocked());
+        OBoolProperty(userProps, "mvg_rotationOnly").set(pose->isRotationOnly());
 
         // Convert from computer vision convention to computer graphics (opengl-like)
         Eigen::Matrix4d M = Eigen::Matrix4d::Identity();
@@ -397,7 +398,7 @@ void AlembicExporter::addSfMSingleCamera(const sfmData::SfMData& sfmData, const 
     const std::shared_ptr<camera::IntrinsicBase> intrinsic =
       (flagsPart & ESfMData::INTRINSICS) ? sfmData.getIntrinsicSharedPtr(view.getIntrinsicId()) : nullptr;
 
-    if (sfmData.isPoseAndIntrinsicDefined(&view) && (flagsPart & ESfMData::EXTRINSICS))
+    if (sfmData.isPoseAndIntrinsicDefined(view) && (flagsPart & ESfMData::EXTRINSICS))
         _dataImpl->addCamera(name, view, pose, intrinsic, nullptr, &_dataImpl->_mvgCameras);
     else
         _dataImpl->addCamera(name, view, pose, intrinsic, nullptr, &_dataImpl->_mvgCamerasUndefined);

@@ -137,7 +137,7 @@ int aliceVision_main(int argc, char** argv)
             // lock all reconstructed views intrinsics
             const sfmData::View& view = *(viewPair.second);
 
-            if (sfmData.isPoseAndIntrinsicDefined(&view))
+            if (sfmData.isPoseAndIntrinsicDefined(view))
             {
                 sfmData.getIntrinsics().at(view.getIntrinsicId())->lock();
             }
