@@ -19,5 +19,12 @@
 
 %{
 #include <aliceVision/version.hpp>
+
+//For unknown reason, we need to declare cameras here too
+#include <aliceVision/camera/IntrinsicBase.hpp>
+#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/camera/Equidistant.hpp>
+
 using namespace aliceVision;
+
 %}
