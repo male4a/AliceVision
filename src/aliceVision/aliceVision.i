@@ -9,6 +9,7 @@
 %include <aliceVision/global.i>
 %include <aliceVision/version.hpp>
 
+%import <aliceVision/numeric/numeric.i>
 %import <aliceVision/camera/Camera.i>
 %import <aliceVision/geometry/Geometry.i>
 %import <aliceVision/hdr/Hdr.i>
