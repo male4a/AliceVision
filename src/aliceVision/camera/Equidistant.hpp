@@ -59,6 +59,8 @@ class Equidistant : public IntrinsicScaleOffsetDisto
 
     Equidistant* clone() const override { return new Equidistant(*this); }
 
+    static std::shared_ptr<Equidistant> cast(std::shared_ptr<IntrinsicBase> sptr);
+
     void assign(const IntrinsicBase& other) override { *this = dynamic_cast<const Equidistant&>(other); }
 
     bool isValid() const override { return _scale(0) > 0 && IntrinsicBase::isValid(); }

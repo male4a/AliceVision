@@ -49,6 +49,8 @@ class Pinhole : public IntrinsicScaleOffsetDisto
 
     void assign(const IntrinsicBase& other) override { *this = dynamic_cast<const Pinhole&>(other); }
 
+    static std::shared_ptr<Pinhole> cast(std::shared_ptr<IntrinsicBase> sptr);
+
     double getFocalLengthPixX() const { return _scale(0); }
 
     double getFocalLengthPixY() const { return _scale(1); }

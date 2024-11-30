@@ -12,6 +12,11 @@
 namespace aliceVision {
 namespace camera {
 
+std::shared_ptr<Equidistant> Equidistant::cast(std::shared_ptr<IntrinsicBase> sptr)
+{
+    return std::dynamic_pointer_cast<Equidistant>(sptr);
+}
+
 Vec2 Equidistant::transformProject(const Eigen::Matrix4d& pose, const Vec4& pt, bool applyDistortion) const
 {
     const double rsensor = std::min(sensorWidth(), sensorHeight());

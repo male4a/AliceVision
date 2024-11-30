@@ -9,6 +9,11 @@
 namespace aliceVision {
 namespace camera {
 
+std::shared_ptr<IntrinsicScaleOffsetDisto> IntrinsicScaleOffsetDisto::cast(std::shared_ptr<IntrinsicBase> sptr)
+{
+    return std::dynamic_pointer_cast<IntrinsicScaleOffsetDisto>(sptr);
+}
+
 bool IntrinsicScaleOffsetDisto::operator==(const IntrinsicBase& otherBase) const
 {
     if (!IntrinsicScaleOffset::operator==(otherBase))
