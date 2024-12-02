@@ -16,7 +16,7 @@ from ..constants import IMAGE_PATH, VIEW_ID, INTRINSIC_ID, POSE_ID, IMAGE_WIDTH,
 # - ImageInfos& getAncestors()
 # - Poses& getPoses() => DONE
 # - Rigs& getRigs() => DONE
-# - Intrinsics& getIntrinsics() => DONE / Intrinsics derived classes not fully binded
+# - Intrinsics& getIntrinsics() => DONE 
 # - Landmarks& getLandmarks() => DONE
 # - Constraints2D& getConstraints2D() => DONE
 # - RotationPriors& getRotationPriors() => DONE
@@ -102,12 +102,11 @@ def test_sfmdata_get_intrinsics():
     assert len(intrinsics) == 0, \
         "The SfMData object is empty, there should not be any Intrinsic in it"
 
-    # TODO: Add Intrinsic object to the list once derived classes are fully binded
-    # Create an Intrinsic object and add it to the list
-    # intrinsic = av.IntrinsicBase()
-    # intrinsics[INTRINSIC_ID] = intrinsic
-    # assert len(data.getIntrinsics()) == len(intrinsics) == 1, \
-    #     "The list of Intrinsics should have been updated"
+    #Create an Intrinsic object and add it to the list
+    intrinsic = av.Pinhole()
+    intrinsics[INTRINSIC_ID] = intrinsic
+    assert len(data.getIntrinsics()) == len(intrinsics) == 1, \
+        "The list of Intrinsics should have been updated"
 
 
 def test_sfmdata_get_landmarks():
