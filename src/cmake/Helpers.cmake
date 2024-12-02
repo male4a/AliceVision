@@ -266,8 +266,6 @@ function(alicevision_add_test test_file)
   if(UNIX)
     # setup LD_LIBRARY_PATH for running tests
     get_property(TEST_LINK_DIRS TARGET ${TEST_EXECUTABLE_NAME} PROPERTY LINK_DIRECTORIES)
-
-    set_property(TEST test_${TEST_EXECUTABLE_NAME} PROPERTY ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}:${TEST_LINK_DIRS}:$ENV{LD_LIBRARY_PATH}")
   endif()
   
   if (WIN32)
