@@ -5,6 +5,7 @@ Collection of unit tests for the Equidistant intrinsics.
 import pytest
 
 from pyalicevision import camera as av
+from pyalicevision import numeric as avnum
 
 ##################
 ### List of functions:
@@ -163,12 +164,10 @@ def test_equidistant_default_constructor():
     assert intrinsic.h() == 1, "The Equidistant intrinsic's default height should be 1"
 
     scale = intrinsic.getScale()
-    # TODO: uncomment check on the scale when Vec2 is binded
-    # assert scale[0] == 1.0 and scale[1] == 1.0
+    assert avnum.getX(scale) == 1.0 and avnum.getY(scale) == 1.0
 
     offset = intrinsic.getOffset()
-    # TODO: uncomment check on the offset when Vec2 is binded
-    # assert offset[0] == 0.0 and offset[1] == 0.0
+    assert avnum.getX(offset) == 0.0 and avnum.getY(offset) == 0.0
 
     assert intrinsic.sensorWidth() == 36.0
     assert intrinsic.sensorHeight() == 24.0
@@ -200,12 +199,10 @@ def test_equidistant_constructors():
     assert intrinsic1.h() == height, "The Equidistant intrinsic's height has not been correctly set"
 
     scale = intrinsic1.getScale()
-    # TODO: uncomment check on the scale when Vec2 is binded
-    # assert scale[0] == focal and scale[1] == focal
+    assert avnum.getX(scale) == focal and avnum.getY(scale) == focal
 
     offset = intrinsic1.getOffset()
-    # TODO: uncomment check on the offset when Vec2 is binded
-    # assert offset[0] == offset_x and offset[1] == offset_y
+    assert avnum.getX(offset) == offset_x and avnum.getY(offset) == offset_y
 
     assert intrinsic1.sensorWidth() == 36.0
     assert intrinsic1.sensorHeight() == 24.0
@@ -225,12 +222,10 @@ def test_equidistant_constructors():
     assert intrinsic2.h() == height, "The Equidistant intrinsic's height has not been correctly set"
 
     scale = intrinsic2.getScale()
-    # TODO: uncomment check on the scale when Vec2 is binded
-    # assert scale[0] == focal and scale[1] == focal
+    assert avnum.getX(scale) == focal and avnum.getY(scale) == focal
 
     offset = intrinsic2.getOffset()
-    # TODO: uncomment check on the offset when Vec2 is binded
-    # assert offset[0] == offset_x and offset[1] == offset_y
+    assert avnum.getX(offset) == offset_x and avnum.getY(offset) == offset_y
 
     assert intrinsic2.sensorWidth() == 36.0
     assert intrinsic2.sensorHeight() == 24.0
@@ -335,8 +330,7 @@ def test_equidistant_get_set_circle():
     assert intrinsic.getCircleCenterY() == center_y
 
     center = intrinsic.getCircleCenter()
-    # TODO: uncomment when Vec2 is binded
-    # assert center[0] == center_x and center[1] == center_y
+    assert avnum.getX(center) == center_x and avnum.getY(center) == center_y
 
 
 def test_equidistant_ratio_lock_unlock():

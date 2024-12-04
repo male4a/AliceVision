@@ -13,6 +13,7 @@
 #include <aliceVision/sfm/sfmFilters.hpp>
 #include <aliceVision/sfm/sfmStatistics.hpp>
 #include <aliceVision/sfm/utils/preprocess.hpp>
+#include <aliceVision/numeric/BoxStats.hpp>
 
 #include <aliceVision/feature/FeaturesPerView.hpp>
 #include <aliceVision/graph/connectedComponent.hpp>

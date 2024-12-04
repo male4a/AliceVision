@@ -7,6 +7,7 @@
 
 #include "generateReport.hpp"
 #include <aliceVision/sfmData/SfMData.hpp>
+#include <aliceVision/numeric/BoxStats.hpp>
 
 #include <aliceVision/utils/Histogram.hpp>
 #include <dependencies/htmlDoc/htmlDoc.hpp>

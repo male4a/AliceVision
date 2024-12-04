@@ -5,6 +5,7 @@ Collection of unit tests for the Radial K3 Undistortion model.
 import pytest
 
 from pyalicevision import camera as av
+from pyalicevision import numeric as avnum
 
 ##################
 ### List of functions:
@@ -46,8 +47,7 @@ def test_undistortion_radial_constructor():
     undistortion = av.UndistortionRadialK3(WIDTH, HEIGHT)
 
     size = undistortion.getSize()
-    # TODO: uncomment when Vec2 is binded
-    # assert size[0] == WIDTH and size[1] == HEIGHT
+    assert avnum.getX(size) == WIDTH and avnum.getY(size) == HEIGHT
 
     assert undistortion.getType() == av.UNDISTORTION_RADIALK3
 
@@ -117,14 +117,12 @@ def test_undistortion_radial_get_set_size():
     size. """
     undistortion = av.UndistortionRadialK3(WIDTH, HEIGHT)
     size = undistortion.getSize()
-    # TODO: uncomment when Vec2 is binded
-    # assert size[0] == WIDTH and size[1] == HEIGHT
+    assert avnum.getX(size) == WIDTH and avnum.getY(size) == HEIGHT
 
     undistortion.setSize(HEIGHT, WIDTH)
     assert size != undistortion.getSize()
     size = undistortion.getSize()
-    # TODO: uncomment when Vec2 is binded
-    # assert size[0] == HEIGHT and size[1] == WIDTH
+    assert avnum.getX(size) == HEIGHT and avnum.getY(size) == WIDTH
 
 
 @pytest.mark.skip(reason="Vec2 not binded")

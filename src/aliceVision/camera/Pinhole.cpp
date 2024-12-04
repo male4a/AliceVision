@@ -9,6 +9,11 @@
 namespace aliceVision {
 namespace camera {
 
+std::shared_ptr<Pinhole> Pinhole::cast(std::shared_ptr<IntrinsicBase> sptr)
+{
+    return std::dynamic_pointer_cast<Pinhole>(sptr);
+}
+
 Mat3 Pinhole::K() const
 {
     Mat3 K;

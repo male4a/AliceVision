@@ -26,6 +26,8 @@ class IntrinsicScaleOffset : public IntrinsicBase
 
     ~IntrinsicScaleOffset() override = default;
 
+    static std::shared_ptr<IntrinsicScaleOffset> cast(std::shared_ptr<IntrinsicBase> sptr);
+
     void copyFrom(const IntrinsicScaleOffset& other) { *this = other; }
 
     bool operator==(const IntrinsicBase& otherBase) const override;

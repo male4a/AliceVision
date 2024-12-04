@@ -59,6 +59,8 @@ class IntrinsicScaleOffsetDisto : public IntrinsicScaleOffset
         }
     }
 
+    static std::shared_ptr<IntrinsicScaleOffsetDisto> cast(std::shared_ptr<IntrinsicBase> sptr);
+
     void assign(const IntrinsicBase& other) override { *this = dynamic_cast<const IntrinsicScaleOffsetDisto&>(other); }
 
     bool operator==(const IntrinsicBase& otherBase) const override;

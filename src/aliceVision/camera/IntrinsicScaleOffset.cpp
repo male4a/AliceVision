@@ -28,6 +28,11 @@ bool IntrinsicScaleOffset::operator==(const IntrinsicBase& otherBase) const
     return _scale.isApprox(other._scale) && _offset.isApprox(other._offset);
 }
 
+std::shared_ptr<IntrinsicScaleOffset> IntrinsicScaleOffset::cast(std::shared_ptr<IntrinsicBase> sptr)
+{
+    return std::dynamic_pointer_cast<IntrinsicScaleOffset>(sptr);
+}
+
 Vec2 IntrinsicScaleOffset::cam2ima(const Vec2& p) const { return p.cwiseProduct(_scale) + getPrincipalPoint(); }
 
 Eigen::Matrix2d IntrinsicScaleOffset::getDerivativeCam2ImaWrtScale(const Vec2& p) const

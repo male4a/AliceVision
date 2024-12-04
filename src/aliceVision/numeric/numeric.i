@@ -4,15 +4,27 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-%include <std_shared_ptr.i>
-%shared_ptr(aliceVision::camera::Pinhole)
+%module (module="pyalicevision") numeric
 
+%include <aliceVision/global.i>
+%include <aliceVision/numeric/numeric.hpp>
+
+double getX(const Vec2 & vec);
+double getY(const Vec2 & vec);
 
 %{
-#include <aliceVision/camera/Pinhole.hpp>
+#include <aliceVision/numeric/numeric.hpp>
 using namespace aliceVision;
-using namespace aliceVision::camera;
+
+double getX(const Vec2 & vec)
+{
+    return vec(0);
+}
+
+double getY(const Vec2 & vec)
+{
+    return vec(1);
+}
+
 %}
 
-%include <aliceVision/camera/IntrinsicScaleOffsetDisto.i>
-%include <aliceVision/camera/Pinhole.hpp>
