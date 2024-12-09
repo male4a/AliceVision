@@ -37,7 +37,7 @@ int aliceVision_main(int argc, char** argv)
         ("input,i", po::value<std::string>(&sfmDataFilename)->required(),
          "Input SfMData file.")
         ("output,o", po::value<std::string>(&sfmDataOutputFilename)->required(),
-         "SfMData output file with the injected poses.");
+         "SfMData output file with the colorized point cloud.");
     // clang-format on
 
     CmdLine cmdline("AliceVision SfM Colorizing");
