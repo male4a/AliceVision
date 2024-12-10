@@ -231,6 +231,19 @@ if(ALICEVISION_BUILD_SFM)
               Boost::json
     )
 
+    # SfM Colorizing
+    alicevision_add_software(aliceVision_sfmColorizing
+        SOURCE main_sfmColorizing.cpp
+        FOLDER ${FOLDER_SOFTWARE_UTILS}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              aliceVision_sfm
+              Boost::program_options
+              Boost::json
+    )
+
     # SfM split reconstructed
     alicevision_add_software(aliceVision_sfmSplitReconstructed
         SOURCE main_sfmSplitReconstructed.cpp
