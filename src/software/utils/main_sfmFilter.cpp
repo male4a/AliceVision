@@ -49,10 +49,10 @@ int aliceVision_main(int argc, char** argv)
          "Path to the output SfMData file.\n")
          ("outputSfMData_unselected,o", po::value<std::string>(&outputSfMFilenameUnselected)->required(),
          "Path to the output SfMData file.\n");
-
+    // clang-format on
+    
     CmdLine cmdline("AliceVision sfmFilter");
     cmdline.add(requiredParams);
-    //cmdline.add(optionalParams);
 
     if (!cmdline.execute(argc, argv))
     {
