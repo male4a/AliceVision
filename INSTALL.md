@@ -384,33 +384,33 @@ Check the sample in [samples](src/samples/aliceVisionAs3rdParty) for an example 
 
 ### Docker image
 
-A docker image can be built using the CentOS or Ubuntu Dockerfiles.
+A docker image can be built using the Ubuntu or Rocky Linux Dockerfiles.
 The Dockerfiles are based on `nvidia/cuda` images (https://hub.docker.com/r/nvidia/cuda/)
 
 To generate the docker image, just run:
 ```
-./docker/build-centos.sh
+./docker/build-rocky.sh
 ```
 
-To do it manually, parameters `OS_TAG` and `CUDA_TAG` should be passed to choose the OS and CUDA version.
-For example, the first line of below's commands shows the example to create docker for a CentOS 7 with Cuda 11.3.1 and second line for Ubuntu 16.04 with Cuda 11.0:
+To do it manually, parameters `ROCKY_VERSION`/`UBUNTU_VERSION` and `CUDA_TAG` should be passed to choose the OS and CUDA versions.
+For example, the first line of the commands below shows the example to create docker for a Rocky 9 with Cuda 12.1.0 and the second line for Ubuntu 16.04 with Cuda 11.0:
 
 ```
-docker build --build-arg OS_TAG=7 --build-arg CUDA_TAG=11.3.1 --tag alicevision:centos7-cuda11.3.1 .
-docker build --build-arg OS_TAG=16.04 --build-arg CUDA_TAG=11.0 --build-arg NPROC=8 --tag alicevision:ubuntu16.04-cuda11.0 -f Dockerfile_ubuntu .
+docker build --build-arg ROCKY_VERSION=9 --build-arg CUDA_TAG=12.1.0 --tag alicevision:rocky9-cuda12.1.0 -f Dockerfile_rocky .
+docker build --build-arg UBUNTU_VERSION=22.04 --build-arg CUDA_TAG=12.1.0 --build-arg NPROC=8 --tag alicevision:ubuntu22.04-cuda12.1.0 -f Dockerfile_ubuntu .
 ```
 
 In order to run the image [nvidia docker](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)) is needed.
 
 ```
-docker run -it --runtime=nvidia alicevision:centos7-cuda9.2
+docker run -it --runtime=nvidia alicevision:rocky9-cuda12.1.0
 ```
 
 To retrieve the generated files:
 
 ```
 # Create an instance of the image, copy the files and remove the temporary docker instance.
-CID=$(docker create alicevision:centos7-cuda11.3.1) && docker cp ${CID}:/opt/AliceVision_install . && docker cp ${CID}:/opt/AliceVision_bundle . && docker rm ${CID}
+CID=$(docker create alicevision:rocky9-cuda12.1.0) && docker cp ${CID}:/opt/AliceVision_install . && docker cp ${CID}:/opt/AliceVision_bundle . && docker rm ${CID}
 ```
 
 Environment variable
