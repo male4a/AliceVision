@@ -46,36 +46,6 @@ namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
 /**
- * @brief Retrieve the view id in the sfmData from the image filename.
- * @param[in] sfmData the SfM scene
- * @param[in] name the image name to find (uid or filename or path)
- * @param[out] out_viewId the id found
- * @return if a view is found
- */
-bool retrieveViewIdFromImageName(const sfmData::SfMData& sfmData, const std::string& name, IndexT& out_viewId)
-{
-    out_viewId = UndefinedIndexT;
-
-    // list views uid / filenames and find the one that correspond to the user ones
-    for (const auto& viewPair : sfmData.getViews())
-    {
-        const sfmData::View& v = *(viewPair.second.get());
-
-        if (name == std::to_string(v.getViewId()) || name == fs::path(v.getImage().getImagePath()).filename().string() ||
-            name == v.getImage().getImagePath())
-        {
-            out_viewId = v.getViewId();
-            break;
-        }
-    }
-
-    if (out_viewId == UndefinedIndexT)
-        ALICEVISION_LOG_ERROR("Can't find the given initial pair view: " << name);
-
-    return out_viewId != UndefinedIndexT;
-}
-
-/**
  * @brief estimate a median angle (parallax) between a reference view and another view
  * @param sfmData the input sfmData which contains camera information
  * @param referenceViewId the reference view id
@@ -307,17 +277,24 @@ int aliceVision_main(int argc, char** argv)
             return EXIT_FAILURE;
         }
 
-        if (!initialPairString.first.empty() && !retrieveViewIdFromImageName(sfmData, initialPairString.first, initialPair.first))
+        if (!initialPairString.first.empty())
         {
-            ALICEVISION_LOG_ERROR("Could not find corresponding view in the initial pair: " + initialPairString.first);
-            return EXIT_FAILURE;
+            initialPair.first = sfmData.findView(initialPairString.first);
+            if (initialPair.first == UndefinedIndexT)
+            {
+                ALICEVISION_LOG_ERROR("Could not find corresponding view in the initial pair: " + initialPairString.first);
+                return EXIT_FAILURE;
+            }
         }
 
-        if (!initialPairString.second.empty() &&
-            !retrieveViewIdFromImageName(sfmData, initialPairString.second, initialPair.second))
+        if (!initialPairString.second.empty())
         {
-            ALICEVISION_LOG_ERROR("Could not find corresponding view in the initial pair: " + initialPairString.second);
-            return EXIT_FAILURE;
+            initialPair.second = sfmData.findView(initialPairString.second);
+            if (initialPair.second == UndefinedIndexT)
+            {
+                ALICEVISION_LOG_ERROR("Could not find corresponding view in the initial pair: " + initialPairString.second);
+                return EXIT_FAILURE;
+            }
         }
     }
 
