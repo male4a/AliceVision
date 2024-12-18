@@ -220,8 +220,10 @@ int aliceVision_main(int argc, char** argv)
 
     // user optional parameters
     const double maxEpipolarDistance = 4.0;
-    const double minAngle = 5.0;
-    const double maxAngle = 40.0;
+    double minAngle = 5.0;
+    double maxAngle = 40.0;
+    std::pair<std::string, std::string> initialPairString("", "");
+    std::pair<IndexT, IndexT> initialPair(UndefinedIndexT, UndefinedIndexT);
 
     int randomSeed = std::mt19937::default_seed;
 
@@ -232,9 +234,17 @@ int aliceVision_main(int argc, char** argv)
     ("tracksFilename,t", po::value<std::string>(&tracksFilename)->required(), "Tracks file.")
     ("pairs,p", po::value<std::string>(&pairsDirectory)->required(), "Path to the pairs directory.");
 
+    po::options_description optionalParams("Required parameters");
+    optionalParams.add_options()
+    ("minAngleInitialPair", po::value<double>(&minAngle)->default_value(minAngle), "Minimum angle for the initial pair.")
+    ("maxAngleInitialPair", po::value<double>(&maxAngle)->default_value(maxAngle), "Maximum angle for the initial pair.")
+    ("initialPairA", po::value<std::string>(&initialPairString.first)->default_value(initialPairString.first), "UID or filepath or filename of the first image.")
+    ("initialPairB", po::value<std::string>(&initialPairString.second)->default_value(initialPairString.second), "UID or filepath or filename of the second image.");
+
     CmdLine cmdline("AliceVision SfM Bootstraping");
 
     cmdline.add(requiredParams);
+    cmdline.add(optionalParams);
     if(!cmdline.execute(argc, argv))
     {
         return EXIT_FAILURE;
@@ -257,6 +267,45 @@ int aliceVision_main(int argc, char** argv)
     {
         ALICEVISION_LOG_INFO("SfmData has already an initialization");
         return EXIT_SUCCESS;
+    }
+
+    if (!initialPairString.first.empty() || !initialPairString.second.empty())
+    {
+        if (initialPairString.first == initialPairString.second)
+        {
+            ALICEVISION_LOG_ERROR("Invalid image names. You cannot use the same image to initialize a pair.");
+            return EXIT_FAILURE;
+        }
+
+        if (!initialPairString.first.empty())
+        {
+            initialPair.first = sfmData.findView(initialPairString.first);
+            if (initialPair.first == UndefinedIndexT)
+            {
+                ALICEVISION_LOG_ERROR("Could not find corresponding view in the initial pair: " + initialPairString.first);
+                return EXIT_FAILURE;
+            }
+        }
+
+        if (!initialPairString.second.empty())
+        {
+            initialPair.second = sfmData.findView(initialPairString.second);
+            if (initialPair.second == UndefinedIndexT)
+            {
+                ALICEVISION_LOG_ERROR("Could not find corresponding view in the initial pair: " + initialPairString.second);
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
+    if (initialPair.first != UndefinedIndexT)
+    {
+        ALICEVISION_LOG_INFO("Force one of the selected view to be " << initialPair.first);
+    }
+
+    if (initialPair.second != UndefinedIndexT)
+    {
+        ALICEVISION_LOG_INFO("Force one of the selected view to be " << initialPair.second);
     }
 
     // Load tracks
@@ -305,10 +354,30 @@ int aliceVision_main(int argc, char** argv)
         std::vector<std::size_t> usedTracks;
         double angle = 0.0;
 
+        if (initialPair.first != UndefinedIndexT)
+        {
+            if (pair.reference != initialPair.first && pair.next != initialPair.first)
+            {
+                continue;
+            }
+        }
+
+        if (initialPair.second != UndefinedIndexT)
+        {
+            if (pair.reference != initialPair.second && pair.next != initialPair.second)
+            {
+                continue;
+            }
+        }
+
+        ALICEVISION_LOG_INFO("Processing pair " << initialPair.first << " / " << initialPair.second);
+
         if (!estimatePairAngle(sfmData, pair.reference, pair.next, pair.pose, tracksHandler.getAllTracks(), tracksHandler.getTracksPerView(), angle, usedTracks))
         {
             continue;
         }
+
+        ALICEVISION_LOG_INFO("angle " << initialPair.first << " / " << initialPair.second << " : " << radianToDegree(angle));
 
         if (radianToDegree(angle) > maxAngle)
         {
@@ -329,6 +398,8 @@ int aliceVision_main(int argc, char** argv)
 
         double refScore = sfm::ExpansionPolicyLegacy::computeScore(tracksHandler.getAllTracks(), usedTracks, pair.reference, maxref, 5);
         double nextScore = sfm::ExpansionPolicyLegacy::computeScore(tracksHandler.getAllTracks(), usedTracks, pair.next, maxnext, 5);
+
+        ALICEVISION_LOG_INFO("image score " << initialPair.first << " / " << initialPair.second << " : " << refScore << " / " << nextScore);
 
         double score = std::min(refScore, nextScore) * std::max(1.0, radianToDegree(angle));
 

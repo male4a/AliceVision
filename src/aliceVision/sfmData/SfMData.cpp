@@ -359,6 +359,27 @@ void SfMData::getBoundingBox(Eigen::Vector3d & bbMin, Eigen::Vector3d & bbMax)
     }
 }
 
+IndexT SfMData::findView(const std::string & imageName) const
+{
+    IndexT out_viewId = UndefinedIndexT;
+
+    // list views uid / filenames and find the one that correspond to the user ones
+    for (const auto& viewPair : getViews())
+    {
+        const auto & v = viewPair.second;
+
+        if (imageName == std::to_string(v->getViewId()) || 
+            imageName == fs::path(v->getImage().getImagePath()).filename().string() ||
+            imageName == v->getImage().getImagePath())
+        {
+            out_viewId = v->getViewId();
+            break;
+        }
+    }
+
+    return out_viewId;
+}
+
 LandmarksPerView getLandmarksPerViews(const SfMData& sfmData)
 {
     LandmarksPerView landmarksPerView;

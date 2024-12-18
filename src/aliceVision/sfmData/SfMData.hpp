@@ -377,6 +377,13 @@ class SfMData
     View::sptr getViewSharedPtr(IndexT viewId) { return _views.at(viewId); }
 
     /**
+     * @brief Retrieve the view id in the sfmData from the image filename.
+     * @param[in] name the image name to find (uid or filename or path)
+     * @return a view Id if a view is found or UndefinedIndexT
+     */
+    IndexT findView(const std::string & imageName) const;
+
+    /**
      * @brief Gives the pose of the input view. If this view is part of a rig, it returns rigPose + rigSubPose.
      * @param[in] view The given view
      *
