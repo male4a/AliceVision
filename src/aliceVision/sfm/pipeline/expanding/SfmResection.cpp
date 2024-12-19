@@ -29,6 +29,8 @@ bool SfmResection::processView(
                         double & updatedThreshold
                         )
 {
+    ALICEVISION_LOG_INFO("SfmResection::processView start " << viewId);
+
     // A. Compute 2D/3D matches
     // A1. list tracks ids used by the view
     const aliceVision::track::TrackIdSet & viewTracksIds = tracksPerView.at(viewId);
@@ -50,6 +52,7 @@ bool SfmResection::processView(
 
     if (trackIds.size() < 3)
     {
+        
         // If less than 3 points, the resection is theorically impossible.
         // Let ignore this view.
         return false;
@@ -83,17 +86,21 @@ bool SfmResection::processView(
     double errorMax = 0.0;
     if (!internalResection(intrinsic, randomNumberGenerator, structure, observations, featureTypes, pose, inliers, errorMax))
     {
+        ALICEVISION_LOG_INFO("SfmResection::processView internalResection failed " << viewId);
         return false;
     }
 
     //Refine the pose
     if (!internalRefinement(structure, observations, inliers, pose, intrinsic))
     {
+        ALICEVISION_LOG_INFO("SfmResection::processView internalRefinemanet failed " << viewId);
         return false;
     }
 
     updatedThreshold = errorMax;
     updatedPose = pose;
+
+    ALICEVISION_LOG_INFO("SfmResection::processView end " << viewId);
 
     return true;
 }

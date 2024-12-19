@@ -12,6 +12,8 @@ namespace sfm {
 
 bool ExpansionProcess::process(sfmData::SfMData & sfmData, track::TracksHandler & tracksHandler)
 {
+    ALICEVISION_LOG_INFO("ExpansionProcess start");
+
     if (!_iterationHandler)
     {
         return false;
@@ -58,14 +60,20 @@ bool ExpansionProcess::process(sfmData::SfMData & sfmData, track::TracksHandler 
                 }
             }
         }
+
+        ALICEVISION_LOG_INFO("ExpansionProcess poses count : " << sfmData.getPoses().size());
     }
     while (sfmData.getPoses().size() != nbPoses);
+
+    ALICEVISION_LOG_INFO("ExpansionProcess end");
 
     return true;
 }
 
 bool ExpansionProcess::prepareExisting(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler)
 {
+    ALICEVISION_LOG_INFO("ExpansionProcess prepareExisting");
+
     //Prepare existing data
     remapExistingLandmarks(sfmData, tracksHandler);
 
@@ -90,6 +98,8 @@ bool ExpansionProcess::prepareExisting(sfmData::SfMData & sfmData, const track::
 
 void ExpansionProcess::remapExistingLandmarks(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler)
 {
+    ALICEVISION_LOG_INFO("remapExistingLandmarks");
+
     // get unmap landmarks
     sfmData::Landmarks landmarks;
 
@@ -150,6 +160,8 @@ void ExpansionProcess::remapExistingLandmarks(sfmData::SfMData & sfmData, const 
     {
         ALICEVISION_LOG_INFO("Not all existing landmarks have been remapped");
     }
+
+    ALICEVISION_LOG_INFO("Landmarks count after remapping : " << sfmData.getLandmarks().size());
 }
 
 } // namespace sfm
