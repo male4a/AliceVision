@@ -114,6 +114,11 @@ bool ExpansionPolicyLegacy::process(const sfmData::SfMData & sfmData, const trac
     _selectedViews.insert(vscoring[0].id);
 
     int maxSetSize = _maxViewsPerGroup;
+    if (maxSetSize == 0)
+    {
+        maxSetSize = std::numeric_limits<int>::max();
+    }
+
     if (sfmData.getValidViews().size() < _nbFirstUnstableViews)
     {
         maxSetSize = 1;

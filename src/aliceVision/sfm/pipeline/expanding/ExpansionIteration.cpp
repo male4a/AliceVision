@@ -13,6 +13,8 @@ namespace sfm {
 
 bool ExpansionIteration::process(sfmData::SfMData & sfmData, track::TracksHandler & tracksHandler)
 {
+    ALICEVISION_LOG_INFO("ExpansionIteration::process start");
+
     if (!_chunkHandler)
     {
         return false;
@@ -47,6 +49,8 @@ bool ExpansionIteration::process(sfmData::SfMData & sfmData, track::TracksHandle
 
         _historyHandler->endEpoch(sfmData, _policy->getNextViews());
     }
+
+    ALICEVISION_LOG_INFO("ExpansionIteration::process end");
 
     return true;
 }

@@ -884,6 +884,8 @@ void BundleAdjustmentCeres::createJacobian(const sfmData::SfMData& sfmData, ERef
 
 bool BundleAdjustmentCeres::adjust(sfmData::SfMData& sfmData, ERefineOptions refineOptions)
 {
+    ALICEVISION_LOG_INFO("BundleAdjustmentCeres::adjust start");
+
     // create problem
     ceres::Problem::Options problemOptions;
     problemOptions.loss_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
@@ -921,6 +923,8 @@ bool BundleAdjustmentCeres::adjust(sfmData::SfMData& sfmData, ERefineOptions ref
     _statistics.nbResidualBlocks = summary.num_residuals;
     _statistics.RMSEinitial = std::sqrt(summary.initial_cost / summary.num_residuals);
     _statistics.RMSEfinal = std::sqrt(summary.final_cost / summary.num_residuals);
+
+    ALICEVISION_LOG_INFO("BundleAdjustmentCeres::adjust end");
 
     return true;
 }

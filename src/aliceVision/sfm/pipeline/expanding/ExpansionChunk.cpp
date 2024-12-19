@@ -15,6 +15,15 @@ namespace sfm {
 
 bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewsChunk)
 {   
+    ALICEVISION_LOG_INFO("ExpansionChunk::process start");
+    ALICEVISION_LOG_INFO("Chunk size : " << viewsChunk.size());
+
+    ALICEVISION_LOG_INFO("Chunk items : ");
+    for (const auto &item: viewsChunk)
+    {
+        ALICEVISION_LOG_INFO("- " << item);
+    }
+
     //For all views which have been required
     //Compute the pose given the existing point cloud
     if (!_bundleHandler)
@@ -22,6 +31,7 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
         return false;
     }
 
+    ALICEVISION_LOG_INFO("Resection start");
     #pragma omp parallel for
     for (int i = 0; i < viewsChunk.size(); i++)
     {
@@ -46,7 +56,8 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
 
             #pragma omp critical
             {
-            addPose(sfmData, viewId, pose);
+                
+                addPose(sfmData, viewId, pose);
             }
         }
     }
@@ -62,6 +73,7 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
             validViewIds.insert(viewId);
         }
     }
+    ALICEVISION_LOG_INFO("Updated valid views count in this chunk : " << validViewIds.size());
 
     //Now that all views of the chunks
     if (!triangulate(sfmData, tracksHandler, validViewIds))
@@ -79,11 +91,14 @@ bool ExpansionChunk::process(sfmData::SfMData & sfmData, const track::TracksHand
         _historyHandler->saveState(sfmData);
     }
 
+    ALICEVISION_LOG_INFO("ExpansionChunk::process end");
+
     return true;
 }
 
 bool ExpansionChunk::triangulate(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewIds)
 {
+    ALICEVISION_LOG_INFO("ExpansionChunk::triangulate start");
     SfmTriangulation triangulation(_triangulationMinPoints, _maxTriangulationError);
 
     std::set<IndexT> evaluatedTracks;
@@ -98,6 +113,7 @@ bool ExpansionChunk::triangulate(sfmData::SfMData & sfmData, const track::Tracks
     }
 
     auto & landmarks = sfmData.getLandmarks();
+    ALICEVISION_LOG_INFO("Existing landmarks : " << landmarks.size());
 
     for (const auto & pl : outputLandmarks)
     {
@@ -126,6 +142,9 @@ bool ExpansionChunk::triangulate(sfmData::SfMData & sfmData, const track::Tracks
 
         landmarks.insert(pl);
     }
+
+    ALICEVISION_LOG_INFO("New landmarks count : " << landmarks.size());
+    ALICEVISION_LOG_INFO("ExpansionChunk::triangulate end");
 
     return true;
 }

@@ -13,6 +13,8 @@ namespace sfm {
 
 bool SfmBundle::process(sfmData::SfMData & sfmData, const track::TracksHandler & tracksHandler, const std::set<IndexT> & viewIds)
 {   
+    ALICEVISION_LOG_INFO("SfmBundle::process start");
+
     BundleAdjustmentCeres::CeresOptions options;
     BundleAdjustment::ERefineOptions refineOptions;
 
@@ -40,6 +42,7 @@ bool SfmBundle::process(sfmData::SfMData & sfmData, const track::TracksHandler &
     }
     while (cleanup(sfmData));
 
+    ALICEVISION_LOG_INFO("SfmBundle::process end");
     return true;
 }
 
@@ -57,6 +60,12 @@ bool SfmBundle::cleanup(sfmData::SfMData & sfmData)
     bool somethingErased = eraseUnstablePosesAndObservations(sfmData, _minPointsPerPose, _minTrackLength, &removedViewsIdIteration);
 
     bool somethingChanged = /*somethingErased || */(nbOutliers > _bundleAdjustmentMaxOutlier);
+
+    ALICEVISION_LOG_INFO("SfmBundle::cleanup : ");
+    ALICEVISION_LOG_INFO(" - nbOutliersResidualErr : " << nbOutliersResidualErr);
+    ALICEVISION_LOG_INFO(" - nbOutliersAngleErr : " << nbOutliersAngleErr);
+    ALICEVISION_LOG_INFO(" - somethingErased : " << somethingErased);
+    ALICEVISION_LOG_INFO(" - somethingChanged : " << somethingChanged);
 
     return somethingChanged;
 }
